@@ -16,7 +16,7 @@
 			<key>filename</key>
 			<string>myPTM.cc</string>
 			<key>lastUsed</key>
-			<date>2013-04-07T21:07:50Z</date>
+			<date>2013-04-07T21:28:54Z</date>
 			<key>selected</key>
 			<true/>
 		</dict>
@@ -62,6 +62,6 @@
 	<key>showFileHierarchyDrawer</key>
 	<true/>
 	<key>windowFrame</key>
-	<string>{{61, 0}, {718, 878}}</string>
+	<string>{{61, 86}, {718, 792}}</string>
 </dict>
 </plist>
