@@ -1,0 +1,50 @@
+The Data Manager maintains the data in the files and executes the actual reads and writes on the data files. It will receive commands through the Scheduler and pass the results of executing these commands back. The Data Manager will allow for different searching methods -- scan or hash. \\
+
+The data structures will be:
+
+\begin{itemize}
+\item \textbf{writeBuffer} -- keeps track of uncommitted modifications to files\item \textbf{bufferSize} -- number of buffer pages specified on command line\item \textbf{dbFiles} -- list of data files\end{itemize}
+
+This module will also have the following variables:
+\begin{itemize}
+\item \textbf{searchMode} -- 0 (scan) or 1 (hash)\item \textbf{logFile} -- file handle for Data Manager log file
+\end{itemize}
+
+The following functions will be included in this module:\\
+
+\begin{algorithmic}
+	\State  \# Retrieve the record with id in filename
+	\Function{read}{filename, id}
+		\If{filename doesn't exist}
+			\Return -2
+		\EndIf
+		\State  Search for record with id
+		\If{record doesn't exist}
+			\Return -1
+		\EndIf	
+	\EndFunction
+	\State
+	\State \# Retrieve the record(s) with areaCode in filename
+	\Function{multRead}{filename, areaCode}
+		\If{filename doesn't exist}
+			\Return -2
+		\EndIf
+		\State  search for record(s) with areaCode
+		\If{no such records exist}
+			\Return -1
+		\EndIf	
+	\EndFunction
+	\State
+	\State \# Write the record into filename
+	\Function{write}{filename, record}
+		\If{filename doesn't exist}
+			create file
+		\EndIf
+		\State write record
+	\EndFunction
+	\State
+	\State \# Delete the filename
+	\Function{delete}{filename}
+	\EndFunction
+
+\end{algorithmic} .\\
