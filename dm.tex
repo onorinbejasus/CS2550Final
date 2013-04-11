@@ -3,11 +3,15 @@ The Data Manager maintains the data in the files and executes the actual reads a
 The data structures will be:
 
 \begin{itemize}
-\item \textbf{writeBuffer} -- keeps track of uncommitted modifications to files\item \textbf{bufferSize} -- number of buffer pages specified on command line\item \textbf{dbFiles} -- list of data files\end{itemize}
+\item \textbf{writeBuffer} -- keeps track of uncommitted modifications to files
+\item \textbf{dbFiles} -- list of data files
+\end{itemize}
 
 This module will also have the following variables:
 \begin{itemize}
-\item \textbf{searchMode} -- 0 (scan) or 1 (hash)\item \textbf{logFile} -- file handle for Data Manager log file
+\item \textbf{searchMode} -- 0 (scan) or 1 (hash)
+\item \textbf{bufferSize} -- number of buffer pages specified on command line for searching
+\item \textbf{logFile} -- file handle for Data Manager log file
 \end{itemize}
 
 The following functions will be included in this module:\\
