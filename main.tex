@@ -1,0 +1,22 @@
+This module serves as the main entry point of the transaction manager. The purpose of this module is to process requests from the user, executing the appropriate modules depending on the request. This module is also responsible for keeping track of the global data structures \textbf{transManager}, \textbf{scheduler}, and \textbf{dataManager}; each one corresponding to the module of the same name. The definition of \textit{myPTM}:
+\\
+\begin{algorithmic}[1]
+
+    \STATE \textbf{Inputs}: (Command Line)
+    \STATE \tab{list of script files}
+    \STATE \tab{bufferSize}
+     \STATE \tab{seed = random number generator}
+     \STATE \tab{numBufferPages}
+     \STATE \tab{readMode (0 = round robin, 1 = random}
+      \STATE \tab{searchMode (0 = scan, 1 = hash)}
+      \STATE \textbf{Outputs}: (console)
+       \STATE \tab{numCommitted = \# of committed transactions}
+        \STATE \tab{percentRead = \% of read operations}
+         \STATE \tab{percentWrite = \% of write operations}
+    	 \STATE \tab{avgResponseTime = average response time}
+	
+	\STATE \textbf{ $main()$ } \COMMENT{Input and Output above}  \\
+    
+\end{algorithmic}  .\\
+
+Studying the input and output above, the main module: takes in from the user the scripts; sets the buffer size and the number of buffer pages; initiates the random number see; and decides both the read mode and search mode. After execution of \textit{myPTM} is complete, the module outputs the number of committed transactions, the percent of both read and write operations, as well as the average response time of the entire execution, to the console or a log file for further analysis.
