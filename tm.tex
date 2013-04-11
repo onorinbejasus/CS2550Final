@@ -1,0 +1,40 @@
+The transaction manager in our system can be thought of as the main module of the system; driving execution of the commands executed by the user. After receiving the scripts from the main entry point, our transaction manager will read and parse the commands contained within each file concurrently and pass the new commands to the scheduler. To study effects our \textit{myPTM} in different scenarios of command execution time combinations, the transaction manager will either parse the files in a round robin or random fashion. 
+
+Looking into more detail of this module, the transaction manager will have two data structures: 
+
+\begin{itemize}
+\item \textbf{currTrans} --list of currently executing transactions/processes and script files (TID - thread ID?, script filename) tuples
+\item \textbf{transactionLog} --  tracks effects of currently running transactions.
+\end{itemize}
+
+This module will also have two variables that help drive the execution:
+
+\begin{itemize}
+\item \textbf{readMode} -- 0 (round robin) or 1 (random)
+\item \textbf{logFile} --  - file handle for Transaction Manager log file
+\end{itemize}
+
+With the above definitions in mind, the transactions module will look like:
+
+\begin{algorithmic}[1]
+    \Function{handleCommand}{command,TID,dataItem}
+    \If{abort \&\& transaction}
+    \State \textbf{undoEffects}(TID)
+    \EndIf
+   \State pass on to Scheduler
+   \State after returned status/values
+   \State update transactionLog
+   \EndFunction
+   \State
+   \Function{undoEffects}{TID}
+   \State  \# Undo effects of transaction with TID
+   \EndFunction
+   \State
+    \State  \# Parse next commands to pass on to Scheduler
+   \Function{parseCommands}{scriptFile, numCommands} 
+    \State \For{$i = 1 \to numCommands$}
+    \State extract next command from scriptFile
+    \State \textbf{handleCommand}(command,TID,dataItem)
+    \EndFor
+    \EndFunction
+\end{algorithmic}  .\\
