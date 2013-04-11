@@ -16,7 +16,11 @@ This module will also have the following variables:
 
 The following functions will be included in this module:\\
 
-\begin{algorithmic}
+\noindent\fbox{%
+\parbox{\textwidth}{
+\begin{varwidth}{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}
+\begin{center}
+\begin{algorithmic}[H]
 	\State  \# Retrieve the record with id in filename
 	\Function{read}{filename, id}
 		\If{filename doesn't exist}
@@ -28,7 +32,7 @@ The following functions will be included in this module:\\
 		\EndIf	
 	\EndFunction
 	\State
-	\State \# Retrieve the record(s) with areaCode in filename
+	\State \# Retrieve the record(s) with areaCode in filename                                                   
 	\Function{multRead}{filename, areaCode}
 		\If{filename doesn't exist}
 			\Return -2
@@ -51,4 +55,7 @@ The following functions will be included in this module:\\
 	\Function{delete}{filename}
 	\EndFunction
 
-\end{algorithmic} .\\
+\end{algorithmic} 
+\end{center}
+\end{varwidth} % 
+}}

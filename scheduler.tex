@@ -12,7 +12,7 @@ The scheduler of \textit{myPTM} implements \textit{Strict Two-Phase Locking (S2P
 This locking scheme thus guarantees serializability, a recoverable schedule, avoidance of cascading aborts, and that the precedence graph will be acyclic. $myPTM$ employs the following data structure to handle the locking:
 
 \begin{itemize}
-\item \textbf{lockTable}hash of lock entries: OID, Mode, List, List Wait queue
+\item \textbf{lockTable} - hash of lock entries: OID, Mode, List, List Wait queue
 \subitem Number of transactions currently holding a lock
 \subitem Type of lock held (shared or exclusive)
 \subitem Pointer to queue of lock requests
@@ -31,25 +31,46 @@ to keep track of the dependencies across the transactions.
 The following is how the module will be implemented. The variable \textbf{logFile} handles the scheduler's log: \\
 
 \noindent\fbox{%
+\parbox{\textwidth}{
 \begin{varwidth}{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}
 \begin{center}
 \begin{algorithmic}[H]
 \State \# Ensures strict 2PL and then passes command on to Data Manager
-\State \#Return value passed back by Data Manager or blocked status \Function {handleCommand}{command, TID, dataItem} \State type = use command to determine which lock needed\If{read/multiple read/write/delete}	\If{checkLock(type,TID, dataItem)}		\State pass on to Data Manager	\Else		\State lockStatus = reqLock(type, TID,dataItem)		\If{lockStatus == failure}			\State add to lockTable, wfgMatrix			\Return blocked
-		\Else			\State pass on to Data Manager
+\State \#Return value passed back by Data Manager or blocked status 
+\Function {handleCommand}{command, TID, dataItem} 
+\State type = use command to determine which lock needed
+\If{read/multiple read/write/delete}
+	\If{checkLock(type,TID, dataItem)}
+		\State pass on to Data Manager
+	\Else
+		\State lockStatus = reqLock(type, TID,dataItem)
+		\If{lockStatus == failure}
+			\State add to lockTable, wfgMatrix
+			\Return blocked
+		\Else
+			\State pass on to Data Manager
 		\EndIf
 	\EndIf	
 	
 \ElsIf{commit or abort}
-	\State pass on to Data Manager	\State \textbf{releaseLocks(TID)}
+	\State pass on to Data Manager
+	\State \textbf{releaseLocks(TID)}
 \Else
-	\State error, unknown command\EndIf
+	\State error, unknown command
+\EndIf
 
 \EndFunction
-	\State \# Release locks TID has acquired:\State \# Approve a pending request\State \# Update lockTable, wfgMatrix\Function{releaseLocks}{TID}  \EndFunction
-\State \# Return true if TID has lock of type on dataItem; otherwise, return false\Function{checkLock}{type, TID, dataItem} \EndFunction\State \# Attempt to acquire lock of type on dataItem; return true on success, else false\Function {reqLock}{type, TID, dataItem} \EndFunction
+	
+\State \# Release locks TID has acquired:
+\State \# Approve a pending request
+\State \# Update lockTable, wfgMatrix
+\Function{releaseLocks}{TID}  \EndFunction
+\State \# Return true if TID has lock of type on dataItem; otherwise, return false
+\Function{checkLock}{type, TID, dataItem} \EndFunction
+\State \# Attempt to acquire lock of type on dataItem; return true on success, else false
+\Function {reqLock}{type, TID, dataItem} \EndFunction
 
-\end{algorithmic}
+\end{algorithmic} 
 \end{center}
 \end{varwidth} % 
-}
+}}

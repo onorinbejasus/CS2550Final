@@ -14,9 +14,13 @@ This module will also have two variables that help drive the execution:
 \item \textbf{logFile} --  - file handle for Transaction Manager log file
 \end{itemize}
 
-With the above definitions in mind, the transactions module will look like:
+With the above definitions in mind, the transactions module will look like:\\
 
-\begin{algorithmic}[1]
+\noindent\fbox{%
+\parbox{\textwidth}{
+\begin{varwidth}{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}
+\begin{center}
+\begin{algorithmic}[H]
     \Function{handleCommand}{command,TID,dataItem}
     \If{abort \&\& transaction}
     \State \textbf{undoEffects}(TID)
@@ -37,4 +41,7 @@ With the above definitions in mind, the transactions module will look like:
     \State \textbf{handleCommand}(command,TID,dataItem)
     \EndFor
     \EndFunction
-\end{algorithmic}  .\\
+\end{algorithmic} 
+\end{center}
+\end{varwidth} % 
+}}
