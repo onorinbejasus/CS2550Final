@@ -29,13 +29,16 @@ Timothy Luciani \\
 
 \usepackage{mdframed}
 
-\usepackage[paper=letterpaper,dvips,top=0.25in,left=0.25in,right=0.2in,
-    foot=0.25in,bottom=0.25in]{geometry}
+\usepackage[compact]{titlesec}
+\titlespacing{\section}{0pt}{*1}{*0}
+
+\usepackage[paper=letterpaper,dvips,top=0.25in,left=0.5in,right=0.5in,
+    foot=0.25in,bottom=0.5in]{geometry}
 
 \setlength{\parindent}{0in}
 
 \makeatletter
-\renewcommand{\ALG@beginalgorithmic}{\tiny}
+\renewcommand{\ALG@beginalgorithmic}{\small}
 \makeatother
 
 \begin{document}
@@ -43,14 +46,11 @@ Timothy Luciani \\
  \maketitle
 
 \section{Introduction} 
-
 \input{intro.tex}
-
 \section{Design}
-
 \begin{figure}[ht!]
 \centering
-\includegraphics[width=100mm]{overalldesign.png}
+\includegraphics[width=90mm]{overalldesign.png}
 \caption{The overall workflow of \textit{myPTM} as it executes commands from the user. }
 \label{overflow}
 \end{figure}
