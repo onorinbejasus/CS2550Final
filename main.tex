@@ -6,7 +6,7 @@ This module serves as the main entry point of the transaction manager. The purpo
  \item  \textbf{dataManager} 
  \end{itemize}
 
-each one corresponding to the module of the same name. The main module: takes in from the user the scripts; sets the buffer size and the number of buffer pages; initiates the random number see; and decides both the read mode and search mode. After execution of \textit{myPTM} is complete, the module outputs the number of committed transactions, the percent of both read and write operations, as well as the average response time of the entire execution, to the console or a log file for further analysis.The definition of \textit{myPTM}:\\
+each one corresponding to the module of the same name. The main module: takes in from the user the scripts; sets the buffer size and the number of buffer pages; initiates the random number seed; and decides both the read mode and search mode. After execution of \textit{myPTM} is complete, the module outputs the number of committed transactions, the percent of both read and write operations, as well as the average response time of the entire execution. These statistics are output to the console or to a log file for further analysis.The definition of \textit{myPTM}:\\
 
 \begin{mdframed}
 \begin{algorithmic}[H]
