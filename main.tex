@@ -1,17 +1,14 @@
-This module serves as the main entry point of the transaction manager. The purpose of this module is to process requests from the user, executing the appropriate modules depending on the request. This module is also responsible for keeping track of the global data structures:
+This module serves as the main entry point of the transaction manager. The purpose of this module is to process requests from the user, executing the appropriate modules depending on the request. This module is also responsible for keeping track of the global class instances:
 
 \begin{itemize}
- \item \textbf{transManager} --
- \item \textbf{scheduler} -- 
- \item  \textbf{dataManager} --
+ \item \textbf{transManager} 
+ \item \textbf{scheduler} 
+ \item  \textbf{dataManager} 
  \end{itemize}
 
-each one corresponding to the module of the same name. The definition of \textit{myPTM}:\\
+each one corresponding to the module of the same name. The main module: takes in from the user the scripts; sets the buffer size and the number of buffer pages; initiates the random number see; and decides both the read mode and search mode. After execution of \textit{myPTM} is complete, the module outputs the number of committed transactions, the percent of both read and write operations, as well as the average response time of the entire execution, to the console or a log file for further analysis.The definition of \textit{myPTM}:\\
 
-\noindent\fbox{%
-\parbox{\textwidth}{
-\begin{varwidth}{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}
-\begin{center}
+\begin{mdframed}
 \begin{algorithmic}[H]
 
     \State \textbf{Inputs}: (Command Line)
@@ -32,9 +29,6 @@ each one corresponding to the module of the same name. The definition of \textit
 	\State main entry
 	\EndFunction  
 \end{algorithmic} 
-\end{center} 
-\end{varwidth} % 
-} }  \\ \\
+\end{mdframed} 
 
 
-Studying the input and output above, the main module: takes in from the user the scripts; sets the buffer size and the number of buffer pages; initiates the random number see; and decides both the read mode and search mode. After execution of \textit{myPTM} is complete, the module outputs the number of committed transactions, the percent of both read and write operations, as well as the average response time of the entire execution, to the console or a log file for further analysis.

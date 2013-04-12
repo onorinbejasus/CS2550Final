@@ -1,15 +1,6 @@
-The scheduler of \textit{myPTM} implements \textit{Strict Two-Phase Locking (S2PL)} as its lock manager. This sub manager works as follows:
+The Scheduler has two submodules: Lock Manager and the Deadlock Detector. The Lock Manager implements \textit{Strict Two-Phase Locking (Strict 2PL)}. Locking is performed at the file level. The Lock Manager acquires the locks for a transaction or process on an as-needed basis. So, if a transaction/process T wants to read/write a file it will have to acquire the appropriate shared/exclusive lock. \\
 
-\begin{algorithmic}
-
-	\If{T wants to read/write on an object}
-	\State Obtains S/X lock.
-	\State Holds lock until end of transaction 
-	\EndIf
-   
-\end{algorithmic}  . \\
-
-This locking scheme thus guarantees serializability, a recoverable schedule, avoidance of cascading aborts, and that the precedence graph will be acyclic. $myPTM$ employs the following data structure to handle the locking:
+The difference between a transaction and a process is releasing a lock. A transaction will hold all locks until commit or abort time when they are released all at once, whereas a process will release and acquire locks as needed on a per-command basis. Using Strict 2PL guarantees serializability, a recoverable schedule, avoidance of cascading aborts, and that the precedence graph will be acyclic. $myPTM$ employs the following data structure to handle the locking:
 
 \begin{itemize}
 \item \textbf{lockTable} - hash of lock entries: OID, Mode, List, List Wait queue
@@ -18,7 +9,7 @@ This locking scheme thus guarantees serializability, a recoverable schedule, avo
 \subitem Pointer to queue of lock requests
 \end{itemize}
 
-The second submodule that the schedule controls is the deadlock detector. For this detection, \textit{myPTM} employs the \textit{Wait for Graph} deadlock detection scheme, where nodes of the graph are the transactions with edges from $node_i$ to $node_j$ represent a conflict of $node_i$ waiting for $node_j$. This submodule uses the data structure:
+The second submodule that the schedule controls is the Deadlock Detector. \textit{myPTM} employs the \textit{Wait-for Graph} deadlock detection scheme, where nodes of the graph are the transactions with edges from $node_i$ to $node_j$ represent a conflict of $node_i$ waiting for $node_j$. This submodule uses the following data structure (which is the adjacency matrix of the Wait-for Graph):
 
 \begin{itemize}
 \item \textbf{wfgMatrix} - keep track of dependencies 
@@ -26,14 +17,11 @@ The second submodule that the schedule controls is the deadlock detector. For th
 \subitem waitForTID
 \end{itemize}
 
-to keep track of the dependencies across the transactions. 
+to keep track of the dependencies across the transactions. Deadlock detection will be performed periodically after a certain amount of time has passed. An arbitrary transaction involved in the deadlock will be selected to abort in order to break the deadlock. This submodule also has a variable \textbf{detectTime} that is the period of time used to wait between performing deadlock detection. This period is varied according to whether or not a deadlock is actually detected. \\
 
-The following is how the module will be implemented. The variable \textbf{logFile} handles the scheduler's log: \\
+The following is how the Scheduler will be implemented. The variable \textbf{logFile} handles the scheduler's log: \\
 
-\noindent\fbox{%
-\parbox{\textwidth}{
-\begin{varwidth}{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}
-\begin{center}
+\begin{mdframed}
 \begin{algorithmic}[H]
 \State \# Ensures strict 2PL and then passes command on to Data Manager
 \State \#Return value passed back by Data Manager or blocked status 
@@ -60,17 +48,36 @@ The following is how the module will be implemented. The variable \textbf{logFil
 \EndIf
 
 \EndFunction
-	
-\State \# Release locks TID has acquired:
-\State \# Approve a pending request
-\State \# Update lockTable, wfgMatrix
-\Function{releaseLocks}{TID}  \EndFunction
+
+\State	
+\State \# Update lockTable, wfgMatrix accordingly
+\Function{releaseLocks}{TID} 
+\For{each lock TID has} 
+\State Release the lock
+\State Approve a pending request (if any exist)
+\EndFor
+\EndFunction
+
+\State
 \State \# Return true if TID has lock of type on dataItem; otherwise, return false
 \Function{checkLock}{type, TID, dataItem} \EndFunction
+
+\State
 \State \# Attempt to acquire lock of type on dataItem; return true on success, else false
 \Function {reqLock}{type, TID, dataItem} \EndFunction
 
+\State 
+\State \# Use the wfgMatrix to detect deadlocks
+\Function{detectDeadlock}{} 
+\If {(deadlock detected)}
+	\State TID = select arbitrary transaction involved in cycle
+	\State Let TM know to abort the transaction and: \textbf{undoEffects}(TID) 
+	\State Let DM know about aborted transaction
+	\State \textbf{detectTime} = \textbf{detectTime} / 2
+	\State \Return
+\EndIf
+\State \textbf{detectTime} = \textbf{detectTime} * 4	
+\EndFunction
+
 \end{algorithmic} 
-\end{center}
-\end{varwidth} % 
-}}
+\end{mdframed}
