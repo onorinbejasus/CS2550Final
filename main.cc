@@ -17,11 +17,17 @@
 #include "myScheduler.hh"
 #include "myDM.hh"
 
+// threading libraries
+extern "C"
+ {
+    #include <pthread.h>
+    #include <unistd.h>
+ }
+
+// module initialization (May need to be an array of instances for each script)
 myPTM *ptm = new myPTM();
 myScheduler *scheduler = new myScheduler();
 myDM *dm = new myDM();
-
-char** names;
 
 // ====================
 // = Main Entry Point =
@@ -30,59 +36,83 @@ char** names;
 // Modules
 // ====================
 
+pthread_mutex_t print_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+void *execute(void *arg){
+	
+	std::string scr = *(static_cast<std::string*>(arg));
+		
+	std::string file; // variable to read file into		
+	std::ifstream script(scr.c_str()); // current files
+
+	if (script.is_open()){ //  if able to open file
+
+		/* read entire file */
+
+		script.seekg(0, std::ios::end);   
+		file.reserve(script.tellg());
+		script.seekg(0, std::ios::beg);
+
+		file.assign((std::istreambuf_iterator<char>(script)),
+		            std::istreambuf_iterator<char>());
+
+		script.close(); // close file
+
+		std::istringstream lines(file.c_str()); // iterate over the file lines
+		std::string line;
+		
+		while ( !lines.eof() ){ // continue until EOF
+
+			// get current line
+			getline(lines,line);
+			
+			
+			// lock write here:  YOU SHALL NOT PASS!!
+			pthread_mutex_lock( &print_mutex );
+			
+		  	std::cout << pthread_self() << ":  " << line << std::endl; // output
+			
+			// Unlock write here: Ok, now you can go :)
+			pthread_mutex_unlock( &print_mutex );
+		}
+
+	} else{ // FAIL!
+
+		std::cout << "Unable to open file"; 
+
+	} // end else	
+	
+	/* kill thread and return value */
+	pthread_exit(NULL);
+	return 0;
+}
+
 int main(int argc, char*argv[]){
 	
+	// number of threads to launch
+	const int NUM_THREADS = argc-1;
+	
 	/* initialize random seed: */
-	  srand (time(NULL));
+	srand (time(NULL));
 	
-	/* set the array of names */
-	names = new char *[argc-1];
+	/* array of threads */
+	pthread_t threads[NUM_THREADS]; 
 	
-	/* copy names from command line */
-	for(int i = 0; i < argc-1; i++){
-		names[i] = new char[sizeof(argv[i+1])];
-		strcpy(names[i], argv[i+1]);
+	std::string names[NUM_THREADS];
+	/* launch threads to work with the scripts*/
+	for(int i = 0; i < NUM_THREADS; i++){
+		
+		// get the name of the script
+		names[i] = std::string(argv[i+1]);
+		
+		/* launch thread */
+		pthread_create( &threads[i], NULL, execute, static_cast<void*>( &names[i] ) );
 	}
 	
-	
-	/* open file and start parsing */
-	for(int i = 0; i < argc-1; i++){
-		
-		std::string file; // variable to read file into		
-		std::ifstream script(names[i]); // current files
-		
-//		char *p = strtok(script, " ");
-		
-		if (script.is_open()){ //  if able to open file
-			
-			/* read entire file */
-
-			script.seekg(0, std::ios::end);   
-			file.reserve(script.tellg());
-			script.seekg(0, std::ios::beg);
-
-			file.assign((std::istreambuf_iterator<char>(script)),
-			            std::istreambuf_iterator<char>());
-			
-			script.close(); // close file
-			
-			std::istringstream lines(file.c_str()); // iterate over the file lines
-			std::string line;
-						
-			while ( !lines.eof() ){ // continue until EOF
-			    
-				// get current line
-				getline(lines,line);
-			  	std::cout << line << std::endl; // output
-			}
-	
-		} else{ // FAIL!
-		
-			std::cout << "Unable to open file"; 
-		
-		} // end else
-	
-	} // end for
+	/* wait for all threads to complete */
+	for(int i = 0; i < NUM_THREADS; i++){
+		pthread_join( threads[i], NULL);
+	}
 	
 	return 0;
 } // end main

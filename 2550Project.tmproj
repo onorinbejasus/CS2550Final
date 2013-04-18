@@ -46,7 +46,7 @@
 			<key>filename</key>
 			<string>main.cc</string>
 			<key>lastUsed</key>
-			<date>2013-04-16T14:58:44Z</date>
+			<date>2013-04-18T05:54:28Z</date>
 		</dict>
 	</array>
 	<key>fileHierarchyDrawerWidth</key>
@@ -58,14 +58,14 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>34</integer>
+				<integer>30</integer>
 				<key>line</key>
-				<integer>61</integer>
+				<integer>51</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>45</integer>
+			<integer>35</integer>
 		</dict>
 		<key>myDM.cc</key>
 		<dict>
@@ -165,6 +165,6 @@
 	<key>showFileHierarchyDrawer</key>
 	<true/>
 	<key>windowFrame</key>
-	<string>{{61, 86}, {718, 792}}</string>
+	<string>{{-0, -0}, {718, 878}}</string>
 </dict>
 </plist>
