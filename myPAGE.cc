@@ -1,4 +1,4 @@
-
+#include "myPAGE.hh"
 
 Page::Page()
 {
