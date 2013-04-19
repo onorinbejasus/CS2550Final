@@ -7,20 +7,21 @@
 #include <vector>
 
 //#include ""
+using namespace std;
 
 class myPTM{
 	
 	public:
-		myPTM(){}; // default constructor
-        myPTM(vector<string> cmd){};
+		myPTM(); // default constructor
+        myPTM(vector<string> cmd);
 	private:
         float m_tran_id;
         int m_start;
         int m_end;
     
-        int lockRows(int start, int end){};
-        int unlockRows(void){};
-        int writeOut(void* buffer,void* dataset){};
+        int lockRows(int start, int end);
+        int unlockRows(void);
+        int writeOut(void* buffer,void* dataset);
 };
 
 #endif

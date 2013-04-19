@@ -10,7 +10,7 @@ myPTM::myPTM(vector<string> cmd)
     int i = 0;
     for(i = 0; i < cmd.size(); i++)
     {
-        string subCmd = cmd.get(i);
+        string subCmd = cmd[i];
         //execute subCmd
     }
 }
