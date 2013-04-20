@@ -7,6 +7,9 @@
 #include <iostream>
 #include <vector>
 
+#define _EXECUTION_ERROR_ -1
+#define _INSERTION_ERROR_ -2
+#define _LOCKFILE_ERROR_  -3
 //#include ""
 using namespace std;
 
@@ -14,6 +17,7 @@ class myPTM
 {
 	
 	public:
+        
 		myPTM(); // default constructor
         myPTM(vector<string> cmd);
 	private:

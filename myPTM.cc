@@ -1,4 +1,9 @@
 #include "myPTM.hh"
+/*
+#define _EXECUTION_ERROR_ -4
+#define _INSERTION_ERROR_ -2
+#define _LOCKFILE_ERROR_  -3
+*/
 
 /*
   Point of transactions:
@@ -19,7 +24,7 @@ myPTM::myPTM(vector<string> cmd)
     FILE * lf = fopen("lockfile","r+");
     char* lock;
     fread(lock,sizeof(char), 1, lf);
-    if(strncmp(lock,"0")==0)
+    if(strcmp(lock,"0")==0)
     {
         fseek(lf,0, SEEK_SET);
         fwrite("1", sizeof(char), 1, lf);
@@ -29,7 +34,7 @@ myPTM::myPTM(vector<string> cmd)
         //if it IS already 1.
         //WAIT();
     }
-    fclose(lf)
+    fclose(lf);
     
     //execute tasks
     int i = 0;
@@ -37,7 +42,7 @@ myPTM::myPTM(vector<string> cmd)
     for(i = 0; i < cmd.size(); i++)
     {
         string subCmd = cmd[i];
-        //int = execute subCmd
+        retVal = executeCommand(subCmd);
         if(retVal == -1)
         {
             break;
@@ -55,7 +60,7 @@ myPTM::myPTM(vector<string> cmd)
     //unlock the file.
     lf = fopen("lockfile","r+");
     fread(lock,sizeof(char), 1, lf);
-    if(strncmp(lock,"1")==0)
+    if(strcmp(lock,"1")==0)
     {
         fseek(lf,0, SEEK_SET);
         fwrite("0", sizeof(char), 1, lf);
@@ -65,11 +70,14 @@ myPTM::myPTM(vector<string> cmd)
         //a fatal error.  Somehow the lock was released before it should have.
         //THROW SOME SORT OF FLAG OR ERROR
     }
-    fclose(lf)
+    fclose(lf);
 }
 
 int myPTM::executeCommand(string cmd)
 {
+    //here is where we are going to execute a series of commands;
+    //if there is any sort of conflict, return an errorCode.
+    
     return -1;
 }
 
