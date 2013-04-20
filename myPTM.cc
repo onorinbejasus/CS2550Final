@@ -68,6 +68,11 @@ myPTM::myPTM(vector<string> cmd)
     fclose(lf)
 }
 
+int myPTM::executeCommand(string cmd)
+{
+    return -1;
+}
+
 int myPTM::lockRows(int start, int end)
 {
     m_start = start;

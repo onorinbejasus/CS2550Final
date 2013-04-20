@@ -24,6 +24,7 @@ class myPTM
         int lockRows(int start, int end);
         int unlockRows(void);
         int writeOut(void* buffer,void* dataset);
+        int executeCommand(string cmd);
 };
 
 #endif
