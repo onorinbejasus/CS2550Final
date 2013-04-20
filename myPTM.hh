@@ -1,3 +1,4 @@
+    
 #ifndef _MYPTM_H_
 #define _MYPTM_H_
 
@@ -9,7 +10,8 @@
 //#include ""
 using namespace std;
 
-class myPTM{
+class myPTM
+{
 	
 	public:
 		myPTM(); // default constructor

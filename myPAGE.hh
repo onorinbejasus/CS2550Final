@@ -2,17 +2,20 @@
 #define _MYPAGE_H_
 
 #include <iostream>
+#include <string>
+#include <stdio.h>
 
-
+using namespace std;
 class Page
 {
     public:
-        Page( long pageSize );
-        Page();
+        Page(){};
+        Page(long file_size);
         int insertBuffer(void* buffer, long size);
     private:
         long m_pageSize;
-        int buildPage(long pageSize);
-}
+        long m_pages;
+        int buildPage(long i, long pageSize);
+};
 
 #endif
