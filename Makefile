@@ -3,9 +3,9 @@
 CXX = g++
 CXXFLAGS = -g -O2 -Wall -Wno-sign-compare -Iinclude -DHAVE_CONFIG_H 
 
-OBJS = myPAGE.o myPTM.o myScheduler.o myDM.o main.o 
+OBJS = myPTM.o myScheduler.o myDM.o main.o 
 
 main: $(OBJS)
-	$(CXX) -o $@ $^ 
+	$(CXX) -g -o $@ $^ 
 clean:
 	rm $(OBJS) main

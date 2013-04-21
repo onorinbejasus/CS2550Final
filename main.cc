@@ -38,13 +38,15 @@ myDM *dm = NULL;
 
 pthread_mutex_t print_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-void *execute(void *arg){
+vector<string> extract(std::string scr){
 	
-	std::string scr = *(static_cast<std::string*>(arg));
-		
+	printf("%s\n", scr.c_str());
+	
 	std::string file; // variable to read file into		
 	std::ifstream script(scr.c_str()); // current files
-
+	
+	std::vector<string> commands;
+	
 	if (script.is_open()){ //  if able to open file
 
 		/* read entire file */
@@ -65,26 +67,28 @@ void *execute(void *arg){
 
 			// get current line
 			getline(lines,line);
+						
+			commands.push_back(line);
 			
-			
+		}
 			// lock write here:  YOU SHALL NOT PASS!!
-			pthread_mutex_lock( &print_mutex );
-			
-		  	std::cout << pthread_self() << ":  " << line << std::endl; // output
+//			pthread_mutex_lock( &print_mutex );
+					
+//		  	std::cout << pthread_self() << ":  " << line << std::endl; // output
 			
 			// Unlock write here: Ok, now you can go :)
-			pthread_mutex_unlock( &print_mutex );
-		}
+//			pthread_mutex_unlock( &print_mutex );
 
 	} else{ // FAIL!
 
-		std::cout << "Unable to open file"; 
+		std::cout << "Unable to open file \n"; 
 
 	} // end else	
 	
 	/* kill thread and return value */
-	pthread_exit(NULL);
-	return 0;
+//	pthread_exit(NULL);
+
+	return commands;
 }
 
 int main(int argc, char*argv[]){
@@ -108,23 +112,31 @@ int main(int argc, char*argv[]){
 	srand (time(NULL));
 	
 	/* array of threads */
-	pthread_t threads[NUM_THREADS]; 
+//	pthread_t threads[NUM_THREADS]; 
 	
 	std::string names[NUM_THREADS];
+	
 	/* launch threads to work with the scripts*/
-	for(int i = 5; i < NUM_THREADS; i++){
+	std::vector< std::vector<string> > transactions;
+	
+	printf("scripts %i\n", NUM_THREADS);
+
+	for(int i = 0; i < NUM_THREADS; i++){
 		
 		// get the name of the script
-		names[i] = std::string(argv[i+1]);
-		
+		names[i] = std::string(argv[i+5]);
+		transactions.push_back( extract( names[i] ) );
+	
 		/* launch thread */
-		pthread_create( &threads[i], NULL, execute, static_cast<void*>( &names[i] ) );
+		// pthread_create( &threads[i], NULL, execute, static_cast<void*>( &names[i] ) );
 	}
 	
-	/* wait for all threads to complete */
-	for(int i = 0; i < NUM_THREADS; i++){
-		pthread_join( threads[i], NULL);
-	}
+	ptm = new myPTM(transactions, readMode);
+	
+	// /* wait for all threads to complete */
+	// for(int i = 0; i < NUM_THREADS; i++){
+	// 	pthread_join( threads[i], NULL);
+	// }
 	
 	return 0;
 } // end main

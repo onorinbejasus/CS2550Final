@@ -3,9 +3,10 @@
 #define _MYPTM_H_
 
 #include <string>
-#include <stdio.h>
+#include <cstdio>
 #include <iostream>
 #include <vector>
+#include <time.h>
 
 #define _EXECUTION_ERROR_ -1
 #define _INSERTION_ERROR_ -2
@@ -18,12 +19,17 @@ class myPTM
 	public:
         
 		myPTM(){}; // default constructor
-        myPTM(vector<string> cT, int rM);
+        myPTM(vector < vector<string> > cT, int rM);
 	
 	private:
-		vector<string> currTrans
+		vector < vector<string> > currTrans;
 		int readMode;
-		FILE *fp;
+		
+		vector<string> *transactionLog;
+		
+		void parseCommands(string *script, int numCommands);
+		void handleCommand(string command, int TID );
+		void undoEffects(int TID);
 };
 
 #endif
