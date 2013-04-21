@@ -25,9 +25,9 @@ extern "C"
  }
 
 // module initialization (May need to be an array of instances for each script)
-myPTM *ptm = new myPTM();
-myScheduler *scheduler = new myScheduler();
-myDM *dm = new myDM();
+myPTM *ptm = NULL; 
+myScheduler *scheduler = NULL;
+myDM *dm = NULL;
 
 // ====================
 // = Main Entry Point =
@@ -89,8 +89,20 @@ void *execute(void *arg){
 
 int main(int argc, char*argv[]){
 	
+	/*
+	1. the maximum number of records/tuples that could be held in a data file (such as 2000);
+	2. the number of buffer pages;
+	3. the search method (scan or hash);
+	4. the method of concurrent reading from program files (round robin or random).
+	*/
+	
+	const int records = atoi(argv[1]);
+	const int numBufferPages = atoi(argv[2]);
+	const int searchMode = atoi(argv[3]);
+	const int readMode = atoi(argv[4]);
+
 	// number of threads to launch
-	const int NUM_THREADS = argc-1;
+	const int NUM_THREADS = argc-5;
 	
 	/* initialize random seed: */
 	srand (time(NULL));
@@ -100,7 +112,7 @@ int main(int argc, char*argv[]){
 	
 	std::string names[NUM_THREADS];
 	/* launch threads to work with the scripts*/
-	for(int i = 0; i < NUM_THREADS; i++){
+	for(int i = 5; i < NUM_THREADS; i++){
 		
 		// get the name of the script
 		names[i] = std::string(argv[i+1]);
