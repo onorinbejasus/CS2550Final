@@ -1,10 +1,12 @@
 class myDM{
 	
 	public:
+        int _LINEAR_ = 0;
+        int _HASH_ = 1;
 		myDM(); // Default constructor
         myDM(int searchMode, long bufferSize);
 	private:
-        int _SEARCH_MODE_;
+        int SEARCH_MODE;
         int read(char*filename, void*id);
         int multRead(char*filename,void* areaCode);
         void* write(char* filename, void* record);

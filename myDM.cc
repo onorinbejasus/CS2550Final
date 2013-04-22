@@ -3,11 +3,11 @@
 
 myDM::myDM()
 {
-    
+    SEARCH_MODE = _LINEAR_
 }
 myDM::myDM(int searchMode, long bufferSize)
 {
-    _SEARCH_MODE_ = searchMode;
+    SEARCH_MODE = searchMode;
 }
 
 
@@ -65,5 +65,13 @@ bool myDM::rExists(char*filename,void* record)
 {
     FILE* fp = fopen(filename,"r");
     //search for record.
+    if(SEARCH_MODE == _LINEAR_)
+    {
+        
+    }
+    else if (SEARCH_MODE == _HASH_)
+    {
+        
+    }
     fclose(fp);
 }
