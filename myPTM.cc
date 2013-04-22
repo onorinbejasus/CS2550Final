@@ -27,8 +27,6 @@ string popQueue(int TID){
 void *handleCommand(void *args){
 	
 	bool done = false;
-		
-	
 	
 	struct thread_args myArgs = *(reinterpret_cast<struct thread_args*>(args));
 	
