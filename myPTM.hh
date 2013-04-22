@@ -6,6 +6,8 @@
 #include <cstdio>
 #include <iostream>
 #include <vector>
+#include <iterator>
+#include <algorithm>
 #include <time.h>
 
 #define _EXECUTION_ERROR_ -1

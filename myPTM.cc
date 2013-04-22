@@ -16,9 +16,7 @@
 myPTM::myPTM(vector< vector<string> > cT, int rM):
 	currTrans(cT), readMode(rM)
 {
-	
-	printf("inside myPTM constructor\n");
-	
+		
 	// create the logfiles for each transaction
 //	transactionLog = vector<string>[currTrans.size()];
 	
@@ -33,45 +31,58 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 	
 	// assign the iterators to their corresponding scripts
 	for(int i = 0; i < currTrans.size(); i++){
-		vector<string>::iterator myIt = currTrans.at(i).begin();
+		vector<string>::iterator myIt = (currTrans.at(i)).begin();
 		it.push_back(myIt);	
 	}
 	
 	if(readMode == 0){ // round robin
 		
-		printf("readmode\n");
-		printf("beginning size %i\n", (int)currTrans.size() );
+		int loop_size = currTrans.size();
+		
 		while(!done){
 			
-			for(int i = 0; i < currTrans.size(); it[i]++, i++){
+			for(int i = 0; i < loop_size; i++){
+								
+				/* serial from here */
+				if(loop_size == 1){
+					
+					parseCommands( &( currTrans.at(0) )[0], ( currTrans.at(0) ).size() );
+					done = true;
+					break;
+				}
 				
 				// if out of commands in current script, remove
-				if( it[i] == currTrans.at(i).end() ){
-				
-					printf("end of list\n");
-					currTrans.erase(currTrans.begin() + i);
-					printf("after erase\n");
-					printf( "size %i\n", (int)currTrans.size() );
+				if( it[i] == ( currTrans.at(i) ).end() ){
+									
+					// remove iterators when done
+										
+					iter_swap( it.begin() + (i), it.begin() + loop_size-1 );
+					iter_swap( currTrans.begin() + (i), currTrans.begin() + loop_size-1 );
+					
+					// revert to previous, then progress
+					loop_size--;
+					
+					i -= 1;
+										
 					// if all scripts are removed, we are done
-					if(currTrans.size() == 0){
-					
-						printf("done!\n");
+					if(loop_size == 0){
 						done = true;
-						break;
-					
-					}else
+						break;	
+					}else // if not keep going
 						continue;
+						
 				} // end if
-								
-				/* get commands and pass them to the parser */
+				
+				/* get commands and pass them to the parser */		
 				commands.push_back(*it[i]);
+				++(it[i]);			
 				
 			} // end for
 			
 			/* for the case where we run out of commands */
-			if(commands.size() != 0){
-			
-		//		parseCommands(&commands[0], commands.size());
+			if(!commands.empty()){
+				
+				parseCommands(&commands[0], commands.size());
 				commands.clear();
 			
 			} // end if
@@ -80,29 +91,45 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 		
 	}else{ // random
 					
-		int scriptSeed, commandSeed;
+		int scriptSeed, commandSeed, cur_index, size;
 		// iterate until all commands have been parsed
-		while(!done){
-			
+		while(!done){		
+						
 			/* get the seends */
+			/* random number = rand % max items + start */
 			scriptSeed = rand() % currTrans.size();
-			commandSeed = rand() % distance( currTrans.at(scriptSeed).begin(), it[scriptSeed]) + ( currTrans.at(scriptSeed).end() - it[scriptSeed] );
 			
-			printf("scriptSeed %i commandSeed %i\n", (int)scriptSeed, (int)commandSeed);
+			/* total number of commands */
+			size = (int)( currTrans.at(scriptSeed).size() );
 			
-			/* get commands and pass them to the parser */
+			/* current index of the iterator */
+			cur_index = (int)( it[scriptSeed] - currTrans.at(scriptSeed).begin() );
+			
+			commandSeed = rand() % (size - cur_index) + cur_index;
+						 
+			/* watch for overflow */
+			if( (size - cur_index) < commandSeed)
+				commandSeed = ( size - cur_index);
+								
+			/* get commands and pass them to the parser */			
 			commands = vector<string>( it[scriptSeed], it[scriptSeed] + commandSeed );
-			printf("command size: %i\n", (int)commands.size());
 			
-	//		parseCommands(&commands[0], commands.size());
+			// increment iterator
+			it[scriptSeed] += commandSeed;
+			
+			parseCommands( &commands[0], (int)(commands.size()) );
 			commands.clear();
 			
+			cur_index = (int)( it[scriptSeed] - currTrans.at(scriptSeed).begin() );
+			
 			// if out of commands in current script, remove
-			if(it[scriptSeed] == currTrans[scriptSeed].end())
+			if( it[scriptSeed] >= currTrans.at(scriptSeed).end() ){
 				currTrans.erase(currTrans.begin() + scriptSeed);
+				it.erase(it.begin() + scriptSeed);
+			}
 			
 			// if all scripts are removed, we are done
-			if(currTrans.size() == 0)
+			if(currTrans.empty())
 				done = true;
 				
 		} // end while
@@ -113,13 +140,12 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 
 void myPTM::parseCommands(string *script, int numCommands){
 	
-	printf("numCommands %i\n", numCommands);
-	
-//	for(int i = 0; i < numCommands; i++){
+	printf("number of commands %i\n", numCommands);
 		
-	//	printf( "%s \n", script[i] );
+	for(int i = 0; i < numCommands; i++){
 		
-//	}
+		printf( "%s \n", script[i].c_str() );
+	}
 	
 }
 

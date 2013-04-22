@@ -54,7 +54,7 @@ vector<string> extract(std::string scr){
 		script.seekg(0, std::ios::end);   
 		file.reserve(script.tellg());
 		script.seekg(0, std::ios::beg);
-
+		
 		file.assign((std::istreambuf_iterator<char>(script)),
 		            std::istreambuf_iterator<char>());
 
@@ -67,7 +67,7 @@ vector<string> extract(std::string scr){
 
 			// get current line
 			getline(lines,line);
-						
+			
 			commands.push_back(line);
 			
 		}
