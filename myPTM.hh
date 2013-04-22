@@ -27,8 +27,21 @@ class myPTM
 		myPTM(){}; // default constructor
         myPTM(vector < vector<string> > cT, int rM);
 	
+		// return true if empty, false otherwise
+		bool checkQueue(int TID) { return command_queue[TID].empty(); };
+		
+		// get the next item in the queue
+		string popQueue(int TID){
+			
+			string command = command_queue[TID].front();
+			command_queue[TID].pop();
+			return command;
+		};
+	
 	private:
+		
 		vector < vector<string> > currTrans;
+		
 		int readMode;
 		
 		/* array of threads */
@@ -36,11 +49,10 @@ class myPTM
 		
 		/* command queues */
 		queue<string> *command_queue;
-		
+				
 		vector<string> *transactionLog;
 		
 		void parseCommands(string *script, int numCommands);
-		void handleCommand(string command, int TID );
 		void undoEffects(int TID);
 };
 

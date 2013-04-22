@@ -1,6 +1,5 @@
 #include "myPAGE.hh"
 
-
 Page::Page(long file_size)
 {
     long default_size = 512;
@@ -19,6 +18,7 @@ int Page::buildPage(long i, long pageSize)
     //fopen a page....  which essentially is the db file.
     //create a string the size of pageSiz
     //write string to file....   creates pageSize characters in the file.
+
     char * b = (char*)malloc(sizeof(char) * 255);
     sprintf(b, "%ld", i);
     string ret(b);

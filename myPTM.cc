@@ -1,17 +1,41 @@
 #include "myPTM.hh"
-/*
-#define _EXECUTION_ERROR_ -4
-#define _INSERTION_ERROR_ -2
-#define _LOCKFILE_ERROR_  -3
-*/
 
-/*
+struct thread_args
+ {
+    myPTM *ptr;
+    int ID;
+};
 
-  Point of transactions:
-  Grouping a set of operations together such that they are not interrupted.  
-  Essentially locking the files until the transaction is done.
-  
-*/
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
+void *handleCommand(void *args){
+	
+	bool done = true;
+	
+	 struct thread_args myArgs = *(reinterpret_cast<struct thread_args*>(args));
+	
+	int TID = myArgs.ID;
+	myPTM *myClass = myArgs.ptr;
+	
+	pthread_mutex_lock( &mutex);
+	cout << TID << endl;
+	pthread_mutex_unlock( &mutex);
+	
+	while(!done){
+		
+		if( !myClass->checkQueue(TID) ){
+			done = false;
+		}else{
+			// continue to wait for input
+			done = true;
+			continue;
+		}
+	}
+	
+	pthread_exit(NULL);
+	
+	return 0;	
+} // end handleCommand
 
 myPTM::myPTM(vector< vector<string> > cT, int rM):
 	currTrans(cT), readMode(rM)
@@ -25,7 +49,7 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 	command_queue = new queue<string>[currTrans.size()];
 	
 	// flag to determine when done with all transactions
-		bool done = false;
+	bool done = false;
 	
 	// commands to be executed	
 	vector<string> commands;
@@ -33,11 +57,21 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 	/* iterators for the scripts to keep track of the position */
 	vector < vector<string>::iterator > it;
 	
+	struct thread_args *myArgs = new struct thread_args[currTrans.size()];
 	// assign the iterators to their corresponding scripts
 	for(int i = 0; i < currTrans.size(); i++){
+		
 		vector<string>::iterator myIt = (currTrans.at(i)).begin();
 		it.push_back(myIt);	
+		
+		// initialize variables to pass into thread		
+		myArgs[i].ID = i;
+		myArgs[i].ptr = this;
+				
+		// create a thread for each script
+		pthread_create( &threads[i], NULL, handleCommand, reinterpret_cast<void*>(&myArgs[i]) );
 	}
+	// clean up
 	
 	if(readMode == 0){ // round robin
 		
@@ -157,14 +191,18 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 				
 	} // end else
 	
+	/* wait for threads to join */
+	for(int i = 0; i < currTrans.size(); i++){
+		pthread_join(threads[i], NULL);
+	}
+	
 }
 
-void myPTM::parseCommands(string *script, int numCommands){
+void myPTM::parseCommands(string *script, int numCommands ){
 			
 	for(int i = 0; i < numCommands; i++){
 		
-		
-		
+		//cout << script[i].c_str() << endl;
 	}
 	
 }
@@ -176,15 +214,5 @@ void myPTM::undoEffects(int TID){
 	
 		
 		
-	
-}
-
-void myPTM::handleCommand(){
-	
-	while(true){
-		
-		
-		
-	}
 	
 }
