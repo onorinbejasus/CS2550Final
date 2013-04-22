@@ -19,7 +19,6 @@
 
 // module initialization (May need to be an array of instances for each script)
 myPTM *ptm = NULL; 
-myScheduler *scheduler = NULL;
 myDM *dm = NULL;
 
 // ====================

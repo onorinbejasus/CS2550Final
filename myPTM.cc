@@ -1,17 +1,34 @@
 #include "myPTM.hh"
-
 struct thread_args
  {
-    myPTM *ptr;
+	myPTM *ptr;
     int ID;
 };
 
 pthread_mutex_t print_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t queue_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t *queue_mutex;
+
+/* command queues */
+queue<string> *command_queue;
+
+// return true if empty, false otherwise
+bool checkQueue(int TID) { 
+	return command_queue[TID].empty(); 
+} // end check
+
+// get the next item in the queue
+string popQueue(int TID){
+	
+	string command = command_queue[TID].front();
+	command_queue[TID].pop();
+	return command;
+} // end pop
 
 void *handleCommand(void *args){
 	
 	bool done = false;
+		
+	
 	
 	struct thread_args myArgs = *(reinterpret_cast<struct thread_args*>(args));
 	
@@ -20,19 +37,19 @@ void *handleCommand(void *args){
 		
 	while(!done){
 		
-		pthread_mutex_lock( &queue_mutex);
-		bool empty = myClass->checkQueue(TID);
-		pthread_mutex_unlock( &queue_mutex);
+		pthread_mutex_lock( &queue_mutex[TID] );
+		bool empty = checkQueue(TID);
+		pthread_mutex_unlock( &queue_mutex[TID] );
 		
 		if( empty == false ){
 			
-			pthread_mutex_lock( &queue_mutex);
-			string command = myClass->popQueue(TID);			
-			pthread_mutex_unlock( &queue_mutex);
+			pthread_mutex_lock( &queue_mutex[TID] );
+			string command =popQueue(TID);			
+			pthread_mutex_unlock( &queue_mutex[TID] );
 			
-			pthread_mutex_lock( &print_mutex);
+			pthread_mutex_lock( &print_mutex );
 			cout << "thread id: " << pthread_self() << "command: " << command << endl;
-			pthread_mutex_unlock( &print_mutex);
+			pthread_mutex_unlock( &print_mutex );
 			
 			if(command.compare("done") == 0)
 				done = true;
@@ -41,7 +58,7 @@ void *handleCommand(void *args){
 			// continue to wait for input
 			continue;
 		}
-	}
+	} // end while
 	
 	pthread_exit(NULL);
 	
@@ -62,22 +79,32 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 	/* iterators for the scripts to keep track of the position */
 	vector < vector<string>::iterator > it;
 	
+	// initialize queue mutexes
+	queue_mutex = new pthread_mutex_t[currTrans.size()];
+		
 	// struct holding thread parameterss
 	struct thread_args *myArgs = new struct thread_args[currTrans.size()];
 	
 	// vector of ids
 	vector<int> myIDS;
 	
+	// init the scheduler
+	//*scheduler = new myScheduler();
+	
 	// assign the iterators to their corresponding scripts
 	for(int i = 0; i < currTrans.size(); i++){
 		
 		vector<string>::iterator myIt = (currTrans.at(i)).begin();
 		it.push_back(myIt);	
-		
+				
 		// initialize variables to pass into thread		
 		myArgs[i].ID = i;
 		myArgs[i].ptr = this;
 		
+		// init mutex
+		pthread_mutex_init(&queue_mutex[i], NULL);
+		
+		// add TID		
 		myIDS.push_back(i);
 				
 		// create a thread for each script
@@ -256,7 +283,6 @@ void myPTM::parseCommands(string *script, int numCommands, int* id, int numScrip
 			cur_script++;
 			
 	} // end for
-	
 }
 
 void myPTM::undoEffects(int TID){
