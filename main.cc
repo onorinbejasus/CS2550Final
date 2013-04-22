@@ -17,13 +17,6 @@
 #include "myScheduler.hh"
 #include "myDM.hh"
 
-// threading libraries
-extern "C"
- {
-    #include <pthread.h>
-    #include <unistd.h>
- }
-
 // module initialization (May need to be an array of instances for each script)
 myPTM *ptm = NULL; 
 myScheduler *scheduler = NULL;
@@ -111,9 +104,6 @@ int main(int argc, char*argv[]){
 	/* initialize random seed: */
 	srand (time(NULL));
 	
-	/* array of threads */
-//	pthread_t threads[NUM_THREADS]; 
-	
 	std::string names[NUM_THREADS];
 	
 	/* launch threads to work with the scripts*/
@@ -126,9 +116,6 @@ int main(int argc, char*argv[]){
 		// get the name of the script
 		names[i] = std::string(argv[i+5]);
 		transactions.push_back( extract( names[i] ) );
-	
-		/* launch thread */
-		// pthread_create( &threads[i], NULL, execute, static_cast<void*>( &names[i] ) );
 	}
 	
 	ptm = new myPTM(transactions, readMode);

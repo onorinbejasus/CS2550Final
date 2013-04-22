@@ -9,10 +9,14 @@
 #include <iterator>
 #include <algorithm>
 #include <time.h>
+#include <queue>
 
-#define _EXECUTION_ERROR_ -1
-#define _INSERTION_ERROR_ -2
-#define _LOCKFILE_ERROR_  -3
+// threading libraries
+extern "C"
+ {
+    #include <pthread.h>
+    #include <unistd.h>
+ }
 
 using namespace std;
 
@@ -26,6 +30,12 @@ class myPTM
 	private:
 		vector < vector<string> > currTrans;
 		int readMode;
+		
+		/* array of threads */
+		pthread_t *threads;
+		
+		/* command queues */
+		queue<string> *command_queue;
 		
 		vector<string> *transactionLog;
 		

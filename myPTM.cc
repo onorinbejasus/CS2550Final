@@ -20,6 +20,10 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 	// create the logfiles for each transaction
 //	transactionLog = vector<string>[currTrans.size()];
 	
+	// initialize the threads
+	threads = new pthread_t[currTrans.size()];
+	command_queue = new queue<string>[currTrans.size()];
+	
 	// flag to determine when done with all transactions
 		bool done = false;
 	
@@ -46,7 +50,10 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 				/* serial from here */
 				if(loop_size == 1){
 					
-					parseCommands( &( currTrans.at(0) )[0], ( currTrans.at(0) ).size() );
+					for(; it[0] != ( currTrans.at(0) ).end(); it[0]++ )
+						commands.push_back(*it[0]);
+					
+					parseCommands( &commands[0], commands.size() );
 					done = true;
 					break;
 				}
@@ -92,12 +99,25 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 	}else{ // random
 					
 		int scriptSeed, commandSeed, cur_index, size;
+		int loop_size = currTrans.size();
 		// iterate until all commands have been parsed
 		while(!done){		
+			
+			/* serial from here */
+			if(loop_size == 1){
+			
+				for(; it[0] != ( currTrans.at(0) ).end(); it[0]++ )
+					commands.push_back(*it[0]);
+				
+				parseCommands( &commands[0], commands.size() );
+				done = true;
+				break;
+		
+			} // end if
 						
 			/* get the seends */
 			/* random number = rand % max items + start */
-			scriptSeed = rand() % currTrans.size();
+			scriptSeed = rand() % loop_size;
 			
 			/* total number of commands */
 			size = (int)( currTrans.at(scriptSeed).size() );
@@ -124,12 +144,13 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 			
 			// if out of commands in current script, remove
 			if( it[scriptSeed] >= currTrans.at(scriptSeed).end() ){
-				currTrans.erase(currTrans.begin() + scriptSeed);
-				it.erase(it.begin() + scriptSeed);
+				iter_swap( it.begin() + (scriptSeed), it.begin() + loop_size-1 );
+				iter_swap( currTrans.begin() + (scriptSeed), currTrans.begin() + loop_size-1 );
+				loop_size--;
 			}
 			
 			// if all scripts are removed, we are done
-			if(currTrans.empty())
+			if(loop_size == 0)
 				done = true;
 				
 		} // end while
@@ -139,19 +160,18 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 }
 
 void myPTM::parseCommands(string *script, int numCommands){
-	
-	printf("number of commands %i\n", numCommands);
-		
+			
 	for(int i = 0; i < numCommands; i++){
 		
-		printf( "%s \n", script[i].c_str() );
+		
+		
 	}
 	
 }
 
 void myPTM::undoEffects(int TID){
 	
-	/* will the transactions not writing out until commit,
+	/* with the transactions not writing out until commit,
 		all we really need to do is drop the transaction log */
 	
 		
@@ -159,8 +179,12 @@ void myPTM::undoEffects(int TID){
 	
 }
 
-void myPTM::handleCommand(string command, int TID ){
+void myPTM::handleCommand(){
 	
-	
+	while(true){
+		
+		
+		
+	}
 	
 }
