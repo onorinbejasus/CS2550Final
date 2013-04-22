@@ -52,7 +52,7 @@ class myPTM
 				
 		vector<string> *transactionLog;
 		
-		void parseCommands(string *script, int numCommands);
+		void parseCommands(string *script, int numCommands, int* id, int numScripts);
 		void undoEffects(int TID);
 };
 

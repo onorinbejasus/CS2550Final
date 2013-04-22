@@ -29,8 +29,6 @@ myDM *dm = NULL;
 // Modules
 // ====================
 
-pthread_mutex_t print_mutex = PTHREAD_MUTEX_INITIALIZER;
-
 vector<string> extract(std::string scr){
 	
 	printf("%s\n", scr.c_str());
@@ -64,22 +62,12 @@ vector<string> extract(std::string scr){
 			commands.push_back(line);
 			
 		}
-			// lock write here:  YOU SHALL NOT PASS!!
-//			pthread_mutex_lock( &print_mutex );
-					
-//		  	std::cout << pthread_self() << ":  " << line << std::endl; // output
-			
-			// Unlock write here: Ok, now you can go :)
-//			pthread_mutex_unlock( &print_mutex );
 
 	} else{ // FAIL!
 
 		std::cout << "Unable to open file \n"; 
 
 	} // end else	
-	
-	/* kill thread and return value */
-//	pthread_exit(NULL);
 
 	return commands;
 }
@@ -119,11 +107,6 @@ int main(int argc, char*argv[]){
 	}
 	
 	ptm = new myPTM(transactions, readMode);
-	
-	// /* wait for all threads to complete */
-	// for(int i = 0; i < NUM_THREADS; i++){
-	// 	pthread_join( threads[i], NULL);
-	// }
 	
 	return 0;
 } // end main

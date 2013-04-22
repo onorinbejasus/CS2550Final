@@ -6,28 +6,39 @@ struct thread_args
     int ID;
 };
 
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t print_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t queue_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void *handleCommand(void *args){
 	
-	bool done = true;
+	bool done = false;
 	
-	 struct thread_args myArgs = *(reinterpret_cast<struct thread_args*>(args));
+	struct thread_args myArgs = *(reinterpret_cast<struct thread_args*>(args));
 	
 	int TID = myArgs.ID;
 	myPTM *myClass = myArgs.ptr;
-	
-	pthread_mutex_lock( &mutex);
-	cout << TID << endl;
-	pthread_mutex_unlock( &mutex);
-	
+		
 	while(!done){
 		
-		if( !myClass->checkQueue(TID) ){
-			done = false;
+		pthread_mutex_lock( &queue_mutex);
+		bool empty = myClass->checkQueue(TID);
+		pthread_mutex_unlock( &queue_mutex);
+		
+		if( empty == false ){
+			
+			pthread_mutex_lock( &queue_mutex);
+			string command = myClass->popQueue(TID);			
+			pthread_mutex_unlock( &queue_mutex);
+			
+			pthread_mutex_lock( &print_mutex);
+			cout << "thread id: " << pthread_self() << "command: " << command << endl;
+			pthread_mutex_unlock( &print_mutex);
+			
+			if(command.compare("done") == 0)
+				done = true;
+			
 		}else{
 			// continue to wait for input
-			done = true;
 			continue;
 		}
 	}
@@ -48,16 +59,15 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 	threads = new pthread_t[currTrans.size()];
 	command_queue = new queue<string>[currTrans.size()];
 	
-	// flag to determine when done with all transactions
-	bool done = false;
-	
-	// commands to be executed	
-	vector<string> commands;
-	
 	/* iterators for the scripts to keep track of the position */
 	vector < vector<string>::iterator > it;
 	
+	// struct holding thread parameterss
 	struct thread_args *myArgs = new struct thread_args[currTrans.size()];
+	
+	// vector of ids
+	vector<int> myIDS;
+	
 	// assign the iterators to their corresponding scripts
 	for(int i = 0; i < currTrans.size(); i++){
 		
@@ -67,11 +77,21 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 		// initialize variables to pass into thread		
 		myArgs[i].ID = i;
 		myArgs[i].ptr = this;
+		
+		myIDS.push_back(i);
 				
 		// create a thread for each script
 		pthread_create( &threads[i], NULL, handleCommand, reinterpret_cast<void*>(&myArgs[i]) );
 	}
-	// clean up
+	
+	// flag to determine when done with all transactions
+	bool done = false;
+	
+	// commands to be executed	
+	vector<string> commands;
+	
+	// id's of the transactions
+	vector<int> ids;
 	
 	if(readMode == 0){ // round robin
 		
@@ -87,7 +107,11 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 					for(; it[0] != ( currTrans.at(0) ).end(); it[0]++ )
 						commands.push_back(*it[0]);
 					
-					parseCommands( &commands[0], commands.size() );
+					// specify end of input
+					commands.push_back("done");
+					ids.push_back(myIDS[0]);
+					
+					parseCommands( &commands[0], commands.size(), &ids[0], (int)ids.size() );
 					done = true;
 					break;
 				}
@@ -95,10 +119,14 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 				// if out of commands in current script, remove
 				if( it[i] == ( currTrans.at(i) ).end() ){
 									
-					// remove iterators when done
-										
+					// specify end of input
+					commands.push_back("done");
+					ids.push_back(myIDS[i]);
+					
+					// remove iterators when dones					
 					iter_swap( it.begin() + (i), it.begin() + loop_size-1 );
 					iter_swap( currTrans.begin() + (i), currTrans.begin() + loop_size-1 );
+					iter_swap( ids.begin() + (i), ids.begin() + loop_size-1 );
 					
 					// revert to previous, then progress
 					loop_size--;
@@ -116,6 +144,7 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 				
 				/* get commands and pass them to the parser */		
 				commands.push_back(*it[i]);
+				ids.push_back(myIDS[i]);
 				++(it[i]);			
 				
 			} // end for
@@ -123,7 +152,8 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 			/* for the case where we run out of commands */
 			if(!commands.empty()){
 				
-				parseCommands(&commands[0], commands.size());
+				parseCommands(&commands[0], commands.size(), &ids[0], (int)ids.size());
+				ids.clear();
 				commands.clear();
 			
 			} // end if
@@ -134,6 +164,7 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 					
 		int scriptSeed, commandSeed, cur_index, size;
 		int loop_size = currTrans.size();
+		
 		// iterate until all commands have been parsed
 		while(!done){		
 			
@@ -143,7 +174,10 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 				for(; it[0] != ( currTrans.at(0) ).end(); it[0]++ )
 					commands.push_back(*it[0]);
 				
-				parseCommands( &commands[0], commands.size() );
+				commands.push_back("done");
+				ids.push_back(myIDS[0]);
+				
+				parseCommands( &commands[0], commands.size(), &ids[0], (int)ids.size() );
 				done = true;
 				break;
 		
@@ -167,21 +201,30 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 								
 			/* get commands and pass them to the parser */			
 			commands = vector<string>( it[scriptSeed], it[scriptSeed] + commandSeed );
+			ids.push_back(myIDS[scriptSeed]);
 			
 			// increment iterator
 			it[scriptSeed] += commandSeed;
-			
-			parseCommands( &commands[0], (int)(commands.size()) );
+						
+			parseCommands( &commands[0], (int)(commands.size()), &ids[0], (int)ids.size() );
 			commands.clear();
+			ids.clear();
 			
 			cur_index = (int)( it[scriptSeed] - currTrans.at(scriptSeed).begin() );
 			
 			// if out of commands in current script, remove
 			if( it[scriptSeed] >= currTrans.at(scriptSeed).end() ){
+				
+				// specify end of input
+				commands.push_back("done");
+				ids.push_back(myIDS[scriptSeed]);
+				
 				iter_swap( it.begin() + (scriptSeed), it.begin() + loop_size-1 );
 				iter_swap( currTrans.begin() + (scriptSeed), currTrans.begin() + loop_size-1 );
+				iter_swap( ids.begin() + (scriptSeed), ids.begin() + loop_size-1 );
+				
 				loop_size--;
-			}
+			} // end if
 			
 			// if all scripts are removed, we are done
 			if(loop_size == 0)
@@ -198,12 +241,21 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 	
 }
 
-void myPTM::parseCommands(string *script, int numCommands ){
-			
+void myPTM::parseCommands(string *script, int numCommands, int* id, int numScripts){
+	
+	// keep track of current script
+	// if random, only one script will be passed into here
+	int cur_script = 0;
+						
 	for(int i = 0; i < numCommands; i++){
 		
-		//cout << script[i].c_str() << endl;
-	}
+		command_queue[ id[cur_script] ].push( script[i] );
+		
+		// basically, if random
+		if(numScripts > 1) 
+			cur_script++;
+			
+	} // end for
 	
 }
 
