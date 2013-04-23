@@ -22,15 +22,16 @@ class Page
 
         void insertTuple(struct tuple tup);
 		bool isFull(int size);
+		struct tuple *getBuffer();
+		
+	protected:
+		void dumpPage();
 		
     private:
 		
 		int MAX_TUPLES; // max number of records a file can hold
 		int page_size; // the default page size
 		int curr_size; // the current size of the page
-		
-		int bot_range;
-		int top_range;
 		
 		vector <struct tuple> tuples;
 		

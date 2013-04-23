@@ -12,7 +12,6 @@ class myDM{
 		int read(int id);
         int multRead();
         void write(struct tuple tup);
-        
 		
 	private:
 		

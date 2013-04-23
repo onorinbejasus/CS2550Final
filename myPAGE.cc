@@ -7,14 +7,17 @@ Page::Page()
 	curr_size = 0;
 }
 
+/* insert tuple into page */
 void Page::insertTuple(struct tuple tup)
 {
 	
 	// insert into tuple into page
 	tuples.push_back(tup);
+	curr_size += sizeof(tup);
 
 }
 
+/* check if page is full */
 bool Page::isFull(int size){
 	
 	if( (curr_size+size) > page_size)
@@ -23,4 +26,13 @@ bool Page::isFull(int size){
 		return false; 
 }
 
+/* return the array of tupples */
+struct tuple* Page::getBuffer(){
+	
+	return &tuples[0];
+}
 
+/* empties the buffer of records */
+void Page::dumpPage(){
+	tuples.clear();
+}
