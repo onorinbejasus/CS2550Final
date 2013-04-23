@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <queue>
+#include <map>
 
 // threading libraries
 extern "C"
@@ -35,18 +36,21 @@ class myScheduler
 	public:
 		myScheduler(){}; // Default Constructor
     	myScheduler(int dT, int nT);
-		bool handleCommand(int TID, string parsedCommand[]);
+		bool handleCommand(int TID, string parsedCommand[], int TID_type);
 		vector<string> schedulerLog;
         
 	private:
         int detectTime;
 				int numThreads;
-				vector<string> *lockTable;
+				//map<int, int> thread_type;
+				//vector<string> *lockTable;
 				vector<int> *wfgMatrix;
         void detectDeadlock();
 				bool checkLock(string type, int TID, string dataItem);
 				bool reqLock(string type, int TID, string dataItem);
 				void releaseLocks(int TID);
+				map<string, vector<record_lock_args> > record_locks;
+				map<string, vector<file_lock_args> > file_locks;
 };
 
 #endif

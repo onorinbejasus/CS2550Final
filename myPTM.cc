@@ -6,6 +6,7 @@ struct thread_args
  {
 	myPTM *ptr;
     int ID;
+		int type; // EMode=1 Transaction | Emode=0 Process
 };
 
 pthread_mutex_t print_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -41,6 +42,7 @@ void *handleCommand(void *args){
 	
 	int TID = myArgs.ID;
 	myPTM *myClass = myArgs.ptr;
+	int TID_type = myArgs.type;
 		
 	while(!done){
 		
@@ -77,9 +79,15 @@ void *handleCommand(void *args){
 			transactionLog.push_back(getTime() + " : Passing command to scheduler"); 
 			pthread_mutex_unlock( &log_mutex );
 			
-			pthread_mutex_lock( &sched_log_mutex );
-			myClass->scheduler->handleCommand(TID, parsed_command);
-			pthread_mutex_unlock( &sched_log_mutex );
+			if (parsed_command[0] == "B") {
+				myArgs.type = atoi(parsed_command[1].c_str());
+				TID_type = myArgs.type;
+			}
+			else {
+				pthread_mutex_lock( &sched_log_mutex );
+				myClass->scheduler->handleCommand(TID, parsed_command, TID_type);
+				pthread_mutex_unlock( &sched_log_mutex );
+			}
 			
 			if(command.compare("done") == 0){
 				pthread_mutex_lock( &log_mutex );
@@ -135,6 +143,7 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 		// initialize variables to pass into thread		
 		myArgs[i].ID = i;
 		myArgs[i].ptr = this;
+		myArgs[i].type = 0;
 		
 		// init mutex
 		pthread_mutex_init(&queue_mutex[i], NULL);

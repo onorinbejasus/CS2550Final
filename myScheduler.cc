@@ -12,14 +12,14 @@ myScheduler::myScheduler(int dT, int nT):
 	detectTime(dT), numThreads(nT)
 {
 	// Keep track if myPTM is done and then once done with queues scheduler is done
-	bool tmDone = false;
-	bool schedDone = false;
+	// bool tmDone = false;
+	// bool schedDone = false;
 	
 	schedulerLog.push_back("Initializing Scheduler.");
 	
 }
 
-bool myScheduler::handleCommand(int TID, string parsedCommand[]) 
+bool myScheduler::handleCommand(int TID, string parsedCommand[], int TID_type) 
 {
 	// used to output TID to log
 	stringstream ss;
@@ -83,6 +83,15 @@ void myScheduler::releaseLocks(int TID)
 // Check if TID has lock of type on dataItem; Return false no / true yes
 bool myScheduler::checkLock(string type, int TID, string dataItem) 
 {
+	// record-level read/write
+	if (type == "R" || type == "W") {
+		
+	}
+	// file-level read/write
+	// type == "M" || type == "D"
+	else {
+		
+	}
 	return false;
 }
 
