@@ -8,12 +8,6 @@
 	Return value passed back by Data Manager or blocked status
 */
 
-// Mutexes
-pthread_mutex_t sched_log_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-// Scheduler log in memory
-vector<string> schedulerLog;
-
 myScheduler::myScheduler(int dT, int nT):
 	detectTime(dT), numThreads(nT)
 {
@@ -22,24 +16,25 @@ myScheduler::myScheduler(int dT, int nT):
 	bool schedDone = false;
 	
 	schedulerLog.push_back("Initializing Scheduler.");
-
-	// How to access array of threads? Or just expose sched_command_queue?
+	
 }
 
-bool myScheduler::handleCommand(string *command, int TID) 
+bool myScheduler::handleCommand(int TID, string parsedCommand[]) 
 {
-	cout << "thread id: " << TID << "command: " << command << "\n";
-	//@TODO Use command to determine which lock needed if read/multiple read/write/delete then
-	int type = 0;
-	string * dataItem = NULL;
+	// used to output TID to log
+	stringstream ss;
+	ss << TID;
+	string base = parsedCommand[0]; // base command
+	string one = parsedCommand[1]; // 1st substring -- filename/Emode
+	string two = parsedCommand[2]; // 2nd substring -- val / record
 	
-	//@TODO Command is read/write/delete 
-	if (type == 0)
-	{
+	// Command is read/mult_read/write/delete 
+	if (base == "R" || base == "M" || base == "W" || base == "D") {
 		// TID has necessary lock
-		if (checkLock(type,TID, dataItem)) 
+		if (checkLock(base,TID,one)) 
 		{
 			// Pass on to Data Manager
+			schedulerLog.push_back(ss.str() + " already has lock for command: " + base + " on " + one);
 			return true;
 		
 		}// end if TID has lock
@@ -47,15 +42,17 @@ bool myScheduler::handleCommand(string *command, int TID)
 		// TID doesn't have lock
 		else 
 		{
-			bool lockStatus = reqLock(type,TID,dataItem); 
+			bool lockStatus = reqLock(base,TID,one); 
 			
 			if (!lockStatus)
 			{
 				// Add to lockTable, wfgMatrix return blocked
-				return true;
+				schedulerLog.push_back(ss.str() + " blocked on lock for command: " + base + " on " + one);
+				return false;
 			}
 			else 
 			{
+				schedulerLog.push_back(ss.str() + " obtains lock for command: " + base + " on " + one);
 				// Pass on to Data Manager
 				return true;
 			}
@@ -63,8 +60,7 @@ bool myScheduler::handleCommand(string *command, int TID)
 		} // end else TID tries to get lock	
 	} // End command is read/write/delete
 	
-	//@TODO Command is commit/abort
-	else if (type == 1) 
+	else if (base == "C" || base == "A") 
 	{
 		// Pass on to Data Manager
 		releaseLocks(TID);
@@ -73,6 +69,7 @@ bool myScheduler::handleCommand(string *command, int TID)
 	
 	// Error - unknown command
 	else {
+		//@TODO	cout << "Unknown command: " + parsedCommand[0] + endl;
 		return false;
 	}
 }
@@ -84,13 +81,13 @@ void myScheduler::releaseLocks(int TID)
 }
 	
 // Check if TID has lock of type on dataItem; Return false no / true yes
-bool myScheduler::checkLock(int type, int TID, string *dataItem) 
+bool myScheduler::checkLock(string type, int TID, string dataItem) 
 {
 	return false;
 }
 
 // Attempt to acquire lock of type on dataItem; Return false failure / true success
-bool myScheduler::reqLock(int type, int TID, string *dataItem)
+bool myScheduler::reqLock(string type, int TID, string dataItem)
 {
 	return false;
 }

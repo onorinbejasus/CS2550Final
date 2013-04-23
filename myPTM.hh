@@ -12,7 +12,7 @@
 #include <queue>
 #include <sstream>
 
-//#include "myScheduler.hh"
+#include "myScheduler.hh"
 
 // threading libraries
 extern "C"
@@ -29,6 +29,8 @@ class myPTM
         
 		myPTM(){}; // default constructor
         myPTM(vector < vector<string> > cT, int rM);
+		/* scheduler */
+		myScheduler *scheduler;	
 	
 	private:
 		
@@ -41,9 +43,7 @@ class myPTM
 		
 		// for printing numbers
 		stringstream ss;
-		
-		/* scheduler */
-		//myScheduler *scheduler;		
+			
 						
 		void parseCommands(string *script, int numCommands, int* id, int numScripts);
 		void undoEffects(int TID);

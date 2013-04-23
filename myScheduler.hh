@@ -14,13 +14,29 @@ extern "C"
 
 using namespace std;
 
+struct file_lock_args {
+	string type; // type of lock
+	int holding[]; // TID's of transactions holding lock
+	char filename[1]; // data filename
+	int waiting[]; // TID's of waiting transactions
+};
+
+struct record_lock_args {
+	string type; // type of lock
+	int holding[]; // TID's of transactions holding lock
+	char filename[1]; // data filename
+	int record_ID[]; // record ID
+	int waiting[]; // TID's of waiting transactions
+};
+
 class myScheduler
 {
 	
 	public:
 		myScheduler(){}; // Default Constructor
     	myScheduler(int dT, int nT);
-		bool handleCommand(string *command, int TID);
+		bool handleCommand(int TID, string parsedCommand[]);
+		vector<string> schedulerLog;
         
 	private:
         int detectTime;
@@ -28,8 +44,8 @@ class myScheduler
 				vector<string> *lockTable;
 				vector<int> *wfgMatrix;
         void detectDeadlock();
-				bool checkLock(int type, int TID, string *dataItem);
-				bool reqLock(int type, int TID, string *dataItem);
+				bool checkLock(string type, int TID, string dataItem);
+				bool reqLock(string type, int TID, string dataItem);
 				void releaseLocks(int TID);
 };
 

@@ -12,6 +12,8 @@ pthread_mutex_t print_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t *queue_mutex;
 
+pthread_mutex_t sched_log_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 extern std::string getTime();
 
 /* command queues */
@@ -63,9 +65,21 @@ void *handleCommand(void *args){
 			// 		cout << "thread id: " << pthread_self() << "command: " << command << endl;
 			// 		pthread_mutex_unlock( &print_mutex );
 			
+    	istringstream iss(command);
+			string parsed_command[3];
+			for (int i = 0; iss; i++) {
+				string sub;
+				iss >> sub;
+				parsed_command[i] = sub;
+			}
+			
 			pthread_mutex_lock( &log_mutex );
-			transactionLog.push_back(getTime() + " : Pasing command to scheduler"); 
+			transactionLog.push_back(getTime() + " : Passing command to scheduler"); 
 			pthread_mutex_unlock( &log_mutex );
+			
+			pthread_mutex_lock( &sched_log_mutex );
+			myClass->scheduler->handleCommand(TID, parsed_command);
+			pthread_mutex_unlock( &sched_log_mutex );
 			
 			if(command.compare("done") == 0){
 				pthread_mutex_lock( &log_mutex );
@@ -109,7 +123,7 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 	vector<int> myIDS;
 	
 	// init the scheduler
-	//*scheduler = new myScheduler();
+	scheduler = new myScheduler(2000, currTrans.size());
 	transactionLog.push_back(getTime() + " : Initializing command iterators");
 	
 	// assign the iterators to their corresponding scripts
@@ -379,6 +393,14 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 		log << transactionLog[i] << "\n";
 	 
 	 log.close();
+	
+	// Writing Scheduler log out 
+	log.open("SchedLog.txt");
+	
+	for(int i = 0; i < scheduler->schedulerLog.size(); i++)
+		log << scheduler->schedulerLog[i] << "\n";
+	 
+	log.close();
 }
 
 void myPTM::parseCommands(string *script, int numCommands, int* id, int numScripts){
