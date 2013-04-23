@@ -413,7 +413,9 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 	
 	/* wait for threads to join */
 	for(int i = 0; i < currTrans.size(); i++){
-		pthread_join(threads[i], NULL);
+		void *returnValue;
+		pthread_join(threads[i], &returnValue);
+		printf("index: %i %d\n", i, (intptr_t)returnValue);
 	}
 	
 	pthread_mutex_lock( &log_mutex );
