@@ -1,0 +1,2 @@
+Type 'make' in directory
+Then run by typing './main @max_tuples @num_buffer @search_method @reading_method scriptFiles'

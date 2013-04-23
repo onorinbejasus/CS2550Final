@@ -1,12 +1,16 @@
 #include "myPTM.hh"
+#include "myDM.hh"
 #include <iostream>
 #include <fstream>
+#include "time.h"
 
+int timeOut = 5; // wait 5 loops then kill myself
 struct thread_args
  {
 	myPTM *ptr;
     int ID;
-		int type; // EMode=1 Transaction | Emode=0 Process
+		int EMode; // EMode=1 Transaction | EMode=0 Process
+		int blocked;
 };
 
 pthread_mutex_t print_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -28,7 +32,6 @@ bool checkQueue(int TID) {
 
 // get the next item in the queue
 string popQueue(int TID){
-	
 	string command = command_queue[TID].front();
 	command_queue[TID].pop();
 	return command;
@@ -42,7 +45,8 @@ void *handleCommand(void *args){
 	
 	int TID = myArgs.ID;
 	myPTM *myClass = myArgs.ptr;
-	int TID_type = myArgs.type;
+	int TID_type = myArgs.EMode;
+	int blocked = myArgs.blocked;
 		
 	while(!done){
 		
@@ -50,7 +54,14 @@ void *handleCommand(void *args){
 		bool empty = checkQueue(TID);
 		pthread_mutex_unlock( &queue_mutex[TID] );
 		
-		if( empty == false ){
+		if (blocked != 0) {
+			if (blocked > timeOut) {
+				//Abort itself
+				//myClass->undoEffects(int TID);
+			}
+			blocked++;
+		}
+		else if(empty == false){
 			
 			stringstream ss;
 			ss << TID;
@@ -79,14 +90,28 @@ void *handleCommand(void *args){
 			transactionLog.push_back(getTime() + " : Passing command to scheduler"); 
 			pthread_mutex_unlock( &log_mutex );
 			
+			bool result = false;
 			if (parsed_command[0] == "B") {
-				myArgs.type = atoi(parsed_command[1].c_str());
-				TID_type = myArgs.type;
+				myArgs.EMode = atoi(parsed_command[1].c_str());
+				TID_type = myArgs.EMode;
 			}
 			else {
 				pthread_mutex_lock( &sched_log_mutex );
-				myClass->scheduler->handleCommand(TID, parsed_command, TID_type);
+				result = myClass->scheduler->handleCommand(TID, parsed_command, TID_type);
 				pthread_mutex_unlock( &sched_log_mutex );
+			}
+
+			if (result) {
+				blocked = 0;
+				if (parsed_command[0] == "R") {
+					//myDM.read(parse_command[2]);
+				} 
+				if (parsed_command[0] == "W") {
+					
+				}
+			}
+			else {
+				blocked++;
 			}
 			
 			if(command.compare("done") == 0){
@@ -143,7 +168,8 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 		// initialize variables to pass into thread		
 		myArgs[i].ID = i;
 		myArgs[i].ptr = this;
-		myArgs[i].type = 0;
+		myArgs[i].EMode = 0;
+		myArgs[i].blocked = 0;
 		
 		// init mutex
 		pthread_mutex_init(&queue_mutex[i], NULL);
@@ -167,6 +193,7 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 	// id's of the transactions
 	vector<int> ids;
 	
+	clock_t startTime = clock();
 	if(readMode == 0){ // round robin
 		
 		pthread_mutex_lock( &log_mutex );
@@ -392,7 +419,8 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 	pthread_mutex_lock( &log_mutex );
 	transactionLog.push_back(getTime() + " : All scripts complete");
 	pthread_mutex_unlock( &log_mutex );
-	
+
+	cout << double( clock() - startTime ) / (double)CLOCKS_PER_SEC<< " seconds." << endl;
 	/* writing transaction log out */
 	
 	ofstream log;

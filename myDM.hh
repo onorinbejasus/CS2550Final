@@ -12,7 +12,7 @@ class myDM{
         myDM(int searchMode, int maxRecords, int numPages);
 		
 		struct tuple read(int id);
-        int multRead();
+        int multRead(int area);
         void write(struct tuple tup);
 		
 	private:

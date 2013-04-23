@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "myDM.hh"
+#include "myPAGE.hh"
 
 // pagess
 Page *pages;
@@ -106,7 +107,7 @@ struct tuple myDM::read(int id)
 }
 
 
-int myDM::multRead()
+int myDM::multRead(int area)
 {
 	return 0;
 }

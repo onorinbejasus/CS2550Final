@@ -15,6 +15,7 @@ extern "C"
 
 using namespace std;
 
+/*
 struct file_lock_args {
 	string type; // type of lock
 	int holding[]; // TID's of transactions holding lock
@@ -29,6 +30,15 @@ struct record_lock_args {
 	int record_ID[]; // record ID
 	int waiting[]; // TID's of waiting transactions
 };
+*/
+
+struct lock_elem {
+	queue <int> prop_TIDs; // first TID is one that has it, unless read then all have it
+	int lock_type; // read = 0 or write = 1
+	int Emode; // proc = 0 or trans = 1
+	int record_level; // record_level = 1 @ record or record_level = 0 @ file
+	queue <int> prop_IDs; // record ID's that TID's want to read
+};
 
 class myScheduler
 {
@@ -42,15 +52,13 @@ class myScheduler
 	private:
         int detectTime;
 				int numThreads;
-				//map<int, int> thread_type;
-				//vector<string> *lockTable;
 				vector<int> *wfgMatrix;
         void detectDeadlock();
 				bool checkLock(string type, int TID, string dataItem);
 				bool reqLock(string type, int TID, string dataItem);
 				void releaseLocks(int TID);
-				map<string, vector<record_lock_args> > record_locks;
-				map<string, vector<file_lock_args> > file_locks;
+				vector<string> currDataFiles;
+				vector<lock_elem> dataLocks;
 };
 
 #endif

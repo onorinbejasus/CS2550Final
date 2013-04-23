@@ -17,6 +17,7 @@ myScheduler::myScheduler(int dT, int nT):
 	
 	schedulerLog.push_back("Initializing Scheduler.");
 	
+	
 }
 
 bool myScheduler::handleCommand(int TID, string parsedCommand[], int TID_type) 
@@ -48,7 +49,7 @@ bool myScheduler::handleCommand(int TID, string parsedCommand[], int TID_type)
 			{
 				// Add to lockTable, wfgMatrix return blocked
 				schedulerLog.push_back(ss.str() + " blocked on lock for command: " + base + " on " + one);
-				return false;
+				return true;
 			}
 			else 
 			{
@@ -70,7 +71,7 @@ bool myScheduler::handleCommand(int TID, string parsedCommand[], int TID_type)
 	// Error - unknown command
 	else {
 		//@TODO	cout << "Unknown command: " + parsedCommand[0] + endl;
-		return false;
+		return true;
 	}
 }
 
@@ -83,14 +84,25 @@ void myScheduler::releaseLocks(int TID)
 // Check if TID has lock of type on dataItem; Return false no / true yes
 bool myScheduler::checkLock(string type, int TID, string dataItem) 
 {
-	// record-level read/write
-	if (type == "R" || type == "W") {
-		
+	int int_type = 0;
+	if (type == "R" || type == "M") int_type = 0;
+	if (currDataFiles.size() == 0) {
+		// struct lock_elem new_lock = new struct lock_elem();
+		// new_lock.prop_TIDS.push(TID);
+		// new_lock.prop_IDs.push(dataItem);
+		// new_lock.lock_type = int_type;
+		return true;
 	}
-	// file-level read/write
-	// type == "M" || type == "D"
 	else {
-		
+		// record-level read/write
+		if (type == "R" || type == "W") {
+			
+		}
+		// file-level read/write
+		// type == "M" || type == "D"
+		else {
+	
+		}
 	}
 	return false;
 }
@@ -98,6 +110,7 @@ bool myScheduler::checkLock(string type, int TID, string dataItem)
 // Attempt to acquire lock of type on dataItem; Return false failure / true success
 bool myScheduler::reqLock(string type, int TID, string dataItem)
 {
+	
 	return false;
 }
 
