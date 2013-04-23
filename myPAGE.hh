@@ -5,6 +5,11 @@
 #include <string>
 #include <stdio.h>
 #include <vector>
+#include <iterator>
+#include <algorithm>
+
+#include <string>
+#include <sstream>
 
 using namespace std;
 
@@ -21,8 +26,15 @@ class Page
         Page();
 
         void insertTuple(struct tuple tup);
+		
+		// check if empty or if will be full with next add
 		bool isFull(int size);
+		bool isEmpty();
+		
 		struct tuple *getBuffer();
+		
+		// see if element is in the buffer
+		struct tuple scan(int id);
 		
 	protected:
 		void dumpPage();
@@ -33,7 +45,10 @@ class Page
 		int page_size; // the default page size
 		int curr_size; // the current size of the page
 		
+		// vectors of the tuples and ids
 		vector <struct tuple> tuples;
+		vector<int> ids;
+		
 		
 };
 

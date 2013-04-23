@@ -2,6 +2,8 @@
 #define _MYDM_
 
 #include "myPAGE.hh"
+#include <iostream>
+#include <fstream>
 
 class myDM{
 	
@@ -9,7 +11,7 @@ class myDM{
 		myDM(){}; // Default constructor
         myDM(int searchMode, int maxRecords, int numPages);
 		
-		int read(int id);
+		struct tuple read(int id);
         int multRead();
         void write(struct tuple tup);
 		
@@ -19,7 +21,7 @@ class myDM{
 		int MAX_NUM_RECORDS;
 		int NUM_PAGES;
         
-		FILE **fp;
+		vector<string> fp;
 		
 		void deleteData(int id);
         bool exists(int id);
