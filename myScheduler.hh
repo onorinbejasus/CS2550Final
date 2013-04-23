@@ -3,6 +3,14 @@
 
 #include <string>
 #include <vector>
+#include <queue>
+
+// threading libraries
+extern "C"
+{
+    #include <pthread.h>
+    #include <unistd.h>
+}
 
 using namespace std;
 
@@ -11,17 +19,18 @@ class myScheduler
 	
 	public:
 		myScheduler(){}; // Default Constructor
-    	myScheduler(int dT);
-		int handleCommand(string *command, int TID, string *dataItem);
+    	myScheduler(int dT, int nT);
+		bool handleCommand(string *command, int TID);
         
 	private:
         int detectTime;
+				int numThreads;
 				vector<string> *lockTable;
 				vector<int> *wfgMatrix;
-        void releaseLocks(int TID); 
-        int checkLock(int type, int TID, string *dataItem);
-        int reqLock(int type, int TID, string *dataItem);
         void detectDeadlock();
+				bool checkLock(int type, int TID, string *dataItem);
+				bool reqLock(int type, int TID, string *dataItem);
+				void releaseLocks(int TID);
 };
 
 #endif
