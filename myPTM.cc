@@ -1,4 +1,8 @@
 #include "myPTM.hh"
+#include <sstream>
+#include <iostream>
+#include <fstream>
+
 struct thread_args
  {
 	myPTM *ptr;
@@ -6,10 +10,12 @@ struct thread_args
 };
 
 pthread_mutex_t print_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t *queue_mutex;
 
 /* command queues */
 queue<string> *command_queue;
+vector<string> transactionLog;
 
 // return true if empty, false otherwise
 bool checkQueue(int TID) { 
@@ -41,16 +47,31 @@ void *handleCommand(void *args){
 		
 		if( empty == false ){
 			
+			stringstream ss;
+			ss << TID;
+			
 			pthread_mutex_lock( &queue_mutex[TID] );
 			string command =popQueue(TID);			
 			pthread_mutex_unlock( &queue_mutex[TID] );
 			
-			pthread_mutex_lock( &print_mutex );
-			cout << "thread id: " << pthread_self() << "command: " << command << endl;
-			pthread_mutex_unlock( &print_mutex );
+			pthread_mutex_lock( &log_mutex );
+			transactionLog.push_back("Popping command off stack[TID]: " + ss.str() + command); 
+			pthread_mutex_unlock( &log_mutex );
 			
-			if(command.compare("done") == 0)
+			// pthread_mutex_lock( &print_mutex );
+			// 		cout << "thread id: " << pthread_self() << "command: " << command << endl;
+			// 		pthread_mutex_unlock( &print_mutex );
+			
+			pthread_mutex_lock( &log_mutex );
+			transactionLog.push_back("Pasing command to scheduler"); 
+			pthread_mutex_unlock( &log_mutex );
+			
+			if(command.compare("done") == 0){
+				pthread_mutex_lock( &log_mutex );
+				transactionLog.push_back("Transaction Done, exiting thread: " + ss.str()); 
+				pthread_mutex_unlock( &log_mutex );
 				done = true;
+			}
 			
 		}else{
 			// continue to wait for input
@@ -67,8 +88,8 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 	currTrans(cT), readMode(rM)
 {
 		
-	// create the logfiles for each transaction
-//	transactionLog = vector<string>[currTrans.size()];
+	transactionLog.push_back("Initializing Transaction Manager.");
+	transactionLog.push_back("Initializing command queues, threads, iterators and mutexes.");
 	
 	// initialize the threads
 	threads = new pthread_t[currTrans.size()];
@@ -88,6 +109,7 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 	
 	// init the scheduler
 	//*scheduler = new myScheduler();
+	transactionLog.push_back("Initializing command iterators");
 	
 	// assign the iterators to their corresponding scripts
 	for(int i = 0; i < currTrans.size(); i++){
@@ -104,7 +126,8 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 		
 		// add TID		
 		myIDS.push_back(i);
-				
+		
+		transactionLog.push_back("Launching thread TID:" + i);		
 		// create a thread for each script
 		pthread_create( &threads[i], NULL, handleCommand, reinterpret_cast<void*>(&myArgs[i]) );
 	}
@@ -120,6 +143,10 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 	
 	if(readMode == 0){ // round robin
 		
+		pthread_mutex_lock( &log_mutex );
+		transactionLog.push_back("Beginning Round Robin Scheduling");
+		pthread_mutex_unlock( &log_mutex );
+		
 		int loop_size = currTrans.size();
 		
 		while(!done){
@@ -128,6 +155,10 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 								
 				/* serial from here */
 				if(loop_size == 1){
+					
+					pthread_mutex_lock( &log_mutex );
+					transactionLog.push_back("One command set remaining, queuing");
+					pthread_mutex_unlock( &log_mutex );
 					
 					for(; it[0] != ( currTrans.at(0) ).end(); it[0]++ )
 						commands.push_back(*it[0]);
@@ -143,10 +174,20 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 				
 				// if out of commands in current script, remove
 				if( it[i] == ( currTrans.at(i) ).end() ){
-									
+					
+					pthread_mutex_lock( &log_mutex );
+					stringstream ss;
+					ss << i;
+					transactionLog.push_back("Command set: " + ss.str() + "has finished queuing"); 
+					pthread_mutex_unlock( &log_mutex );
+						
 					// specify end of input
 					commands.push_back("done");
 					ids.push_back(myIDS[i]);
+					
+					pthread_mutex_lock( &log_mutex );
+					transactionLog.push_back("Concatinating remaining command sets"); 
+					pthread_mutex_unlock( &log_mutex );
 					
 					// remove iterators when dones					
 					iter_swap( it.begin() + (i), it.begin() + loop_size-1 );
@@ -160,6 +201,12 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 										
 					// if all scripts are removed, we are done
 					if(loop_size == 0){
+						
+						pthread_mutex_lock( &log_mutex );
+						transactionLog.push_back("No command sets to queue.");
+						transactionLog.push_back("Begin waiting on threads to complete"); 
+						pthread_mutex_unlock( &log_mutex );
+						
 						done = true;
 						break;	
 					}else // if not keep going
@@ -167,9 +214,14 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 						
 				} // end if
 				
+				pthread_mutex_lock( &log_mutex );
+				transactionLog.push_back("Passing commands to be queued: " + *it[i] ); 
+				pthread_mutex_unlock( &log_mutex );
+				
 				/* get commands and pass them to the parser */		
 				commands.push_back(*it[i]);
 				ids.push_back(myIDS[i]);
+				
 				++(it[i]);			
 				
 			} // end for
@@ -186,7 +238,11 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 		} // end while
 		
 	}else{ // random
-					
+		
+		pthread_mutex_lock( &log_mutex );
+		transactionLog.push_back("Beginning Random Scheduling");
+		pthread_mutex_unlock( &log_mutex );
+		
 		int scriptSeed, commandSeed, cur_index, size;
 		int loop_size = currTrans.size();
 		
@@ -195,7 +251,11 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 			
 			/* serial from here */
 			if(loop_size == 1){
-			
+				
+				pthread_mutex_lock( &log_mutex );
+				transactionLog.push_back("One command set remaining, queuing");
+				pthread_mutex_unlock( &log_mutex );
+				
 				for(; it[0] != ( currTrans.at(0) ).end(); it[0]++ )
 					commands.push_back(*it[0]);
 				
@@ -210,7 +270,12 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 						
 			/* get the seends */
 			/* random number = rand % max items + start */
+			
 			scriptSeed = rand() % loop_size;
+			
+			pthread_mutex_lock( &log_mutex );
+			transactionLog.push_back("Selecting the random transaction id: " + scriptSeed);
+			pthread_mutex_unlock( &log_mutex );
 			
 			/* total number of commands */
 			size = (int)( currTrans.at(scriptSeed).size() );
@@ -219,14 +284,24 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 			cur_index = (int)( it[scriptSeed] - currTrans.at(scriptSeed).begin() );
 			
 			commandSeed = rand() % (size - cur_index) + cur_index;
-						 
+										 
 			/* watch for overflow */
 			if( (size - cur_index) < commandSeed)
 				commandSeed = ( size - cur_index);
+			
+			pthread_mutex_lock( &log_mutex );
+			transactionLog.push_back("Selecting the number commands to queue: " + commandSeed);
+			pthread_mutex_unlock( &log_mutex );
 								
 			/* get commands and pass them to the parser */			
 			commands = vector<string>( it[scriptSeed], it[scriptSeed] + commandSeed );
 			ids.push_back(myIDS[scriptSeed]);
+			
+			pthread_mutex_lock( &log_mutex );
+			transactionLog.push_back("Passing commands to be queued: ");
+			for(int ii = 0; ii < commands.size(); ii++)
+				transactionLog.push_back(commands[ii]);
+			pthread_mutex_unlock( &log_mutex );
 			
 			// increment iterator
 			it[scriptSeed] += commandSeed;
@@ -240,9 +315,19 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 			// if out of commands in current script, remove
 			if( it[scriptSeed] >= currTrans.at(scriptSeed).end() ){
 				
+				pthread_mutex_lock( &log_mutex );
+				stringstream ss;
+				ss << scriptSeed;
+				transactionLog.push_back("Command set: " + ss.str() + "has finished queuing"); 
+				pthread_mutex_unlock( &log_mutex );
+				
 				// specify end of input
 				commands.push_back("done");
 				ids.push_back(myIDS[scriptSeed]);
+				
+				pthread_mutex_lock( &log_mutex );
+				transactionLog.push_back("Concatinating remaining command sets"); 
+				pthread_mutex_unlock( &log_mutex );
 				
 				iter_swap( it.begin() + (scriptSeed), it.begin() + loop_size-1 );
 				iter_swap( currTrans.begin() + (scriptSeed), currTrans.begin() + loop_size-1 );
@@ -252,8 +337,15 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 			} // end if
 			
 			// if all scripts are removed, we are done
-			if(loop_size == 0)
+			if(loop_size == 0){
+				
+				pthread_mutex_lock( &log_mutex );
+				transactionLog.push_back("No command sets to queue.");
+				transactionLog.push_back("Begin waiting on threads to complete");
+				pthread_mutex_unlock( &log_mutex );
+				
 				done = true;
+			}
 				
 		} // end while
 				
@@ -264,15 +356,36 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 		pthread_join(threads[i], NULL);
 	}
 	
+	pthread_mutex_lock( &log_mutex );
+	transactionLog.push_back("All scripts complete");
+	pthread_mutex_unlock( &log_mutex );
+	
+	/* writing transaction log out */
+	
+	ofstream log;
+	log.open ("TMLog.txt");
+	
+	for(int i = 0; i < transactionLog.size(); i++)
+		log << transactionLog[i] << "\n";
+	 
+	 log.close();
 }
 
 void myPTM::parseCommands(string *script, int numCommands, int* id, int numScripts){
+	
+	pthread_mutex_lock( &log_mutex );
+	transactionLog.push_back("Parsing commands"); 
+	pthread_mutex_unlock( &log_mutex );
 	
 	// keep track of current script
 	// if random, only one script will be passed into here
 	int cur_script = 0;
 						
 	for(int i = 0; i < numCommands; i++){
+		
+		pthread_mutex_lock( &log_mutex );
+		transactionLog.push_back("Queuing command: " + script[i]); 
+		pthread_mutex_unlock( &log_mutex );
 		
 		command_queue[ id[cur_script] ].push( script[i] );
 		
@@ -285,10 +398,10 @@ void myPTM::parseCommands(string *script, int numCommands, int* id, int numScrip
 
 void myPTM::undoEffects(int TID){
 	
+	pthread_mutex_lock( &log_mutex );
+	transactionLog.push_back("Undoing effects of TID: " + TID); 
+	pthread_mutex_unlock( &log_mutex );
+	
 	/* with the transactions not writing out until commit,
-		all we really need to do is drop the transaction log */
-	
-		
-		
-	
+		all we really need to do is drop the transaction log */	
 }

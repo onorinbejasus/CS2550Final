@@ -40,9 +40,7 @@ class myPTM
 		
 		/* scheduler */
 		//myScheduler *scheduler;		
-				
-		vector<string> *transactionLog;
-		
+						
 		void parseCommands(string *script, int numCommands, int* id, int numScripts);
 		void undoEffects(int TID);
 };
