@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <time.h>
 #include <queue>
+#include <sstream>
 
 //#include "myScheduler.hh"
 
@@ -37,6 +38,9 @@ class myPTM
 		
 		/* array of threads */
 		pthread_t *threads;
+		
+		// for printing numbers
+		stringstream ss;
 		
 		/* scheduler */
 		//myScheduler *scheduler;		
