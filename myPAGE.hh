@@ -4,18 +4,33 @@
 #include <iostream>
 #include <string>
 #include <stdio.h>
+#include <vector>
 
 using namespace std;
+
+struct tuple{
+
+	int ID; // unique
+	char ClientName[18];
+	char Phone[12];
+};
+
 class Page
 {
     public:
-        Page(){};
-        Page(long file_size);
-        int insertBuffer(void* buffer, long size);
+        Page();
+
+        void insertTuple(struct tuple tup);
+		bool isFull(int size);
+		
     private:
-        long m_pageSize;
-        long m_pages;
-        int buildPage(long i, long pageSize);
+		
+		int MAX_TUPLES; // max number of records a file can hold
+		int page_size; // the default page size
+		int curr_size; // the current size of the page
+		
+		vector <struct tuple> tuples;
+		
 };
 
 #endif

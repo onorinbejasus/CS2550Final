@@ -1,21 +1,28 @@
 #ifndef _MYDM_
 #define _MYDM_
-#define _LINEAR_ 0
-#define _HASH_   1
+
+#include "myPAGE.hh"
 
 class myDM{
 	
 	public:
-		myDM(); // Default constructor
-        myDM(int searchMode, long bufferSize);
+		myDM(){}; // Default constructor
+        myDM(int searchMode, int maxRecords, int numPages);
+
 	private:
+		
         int SEARCH_MODE;
-        int read(char*filename, void*id);
-        int multRead(char*filename,void* areaCode);
-        int write(char* filename, void* record);
-        int deleteData(char* filename);
-        bool exists(char*filename);
-        bool rExists(char*filename,void*record);
+		int MAX_NUM_RECORDS;
+		int NUM_PAGES;
+        
+		FILE **fp;
+
+		int read(int id);
+        int multRead();
+        void write(struct tuple tup);
+        void deleteData(int id);
+        bool exists(int id);
+        bool rExists(int id);
 	
 };
 #endif
