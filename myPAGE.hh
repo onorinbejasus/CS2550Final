@@ -29,6 +29,9 @@ class Page
 		int page_size; // the default page size
 		int curr_size; // the current size of the page
 		
+		int bot_range;
+		int top_range;
+		
 		vector <struct tuple> tuples;
 		
 };

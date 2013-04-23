@@ -16,6 +16,7 @@ myDM::myDM(int searchMode, int maxRecords, int numPages):
 
 int myDM::read(int id)
 {
+	
 	return 0;
 }
 
@@ -28,7 +29,9 @@ int myDM::multRead()
 //write record to file.
 void myDM::write(struct tuple tup)
 {
-    
+
+    // 
+
 }
 
 //delete filename

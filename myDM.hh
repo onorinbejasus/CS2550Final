@@ -8,7 +8,12 @@ class myDM{
 	public:
 		myDM(){}; // Default constructor
         myDM(int searchMode, int maxRecords, int numPages);
-
+		
+		int read(int id);
+        int multRead();
+        void write(struct tuple tup);
+        
+		
 	private:
 		
         int SEARCH_MODE;
@@ -16,11 +21,8 @@ class myDM{
 		int NUM_PAGES;
         
 		FILE **fp;
-
-		int read(int id);
-        int multRead();
-        void write(struct tuple tup);
-        void deleteData(int id);
+		
+		void deleteData(int id);
         bool exists(int id);
         bool rExists(int id);
 	
