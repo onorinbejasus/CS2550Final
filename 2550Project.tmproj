@@ -3,20 +3,20 @@
 <plist version="1.0">
 <dict>
 	<key>currentDocument</key>
-	<string>myPTM.cc</string>
+	<string>main.cc</string>
 	<key>documents</key>
 	<array>
 		<dict>
 			<key>filename</key>
 			<string>myPTM.hh</string>
 			<key>lastUsed</key>
-			<date>2013-04-23T00:18:23Z</date>
+			<date>2013-04-23T03:32:37Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>myDM.cc</string>
 			<key>lastUsed</key>
-			<date>2013-04-22T14:37:10Z</date>
+			<date>2013-04-23T03:23:42Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
@@ -28,9 +28,7 @@
 			<key>filename</key>
 			<string>myPTM.cc</string>
 			<key>lastUsed</key>
-			<date>2013-04-23T00:55:25Z</date>
-			<key>selected</key>
-			<true/>
+			<date>2013-04-23T03:31:59Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
@@ -42,13 +40,15 @@
 			<key>filename</key>
 			<string>myDM.hh</string>
 			<key>lastUsed</key>
-			<date>2013-04-22T14:37:09Z</date>
+			<date>2013-04-23T03:05:13Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>main.cc</string>
 			<key>lastUsed</key>
-			<date>2013-04-23T00:24:39Z</date>
+			<date>2013-04-23T03:32:37Z</date>
+			<key>selected</key>
+			<true/>
 		</dict>
 		<dict>
 			<key>filename</key>
@@ -78,30 +78,14 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>52</integer>
+				<integer>22</integer>
 				<key>line</key>
-				<integer>35</integer>
+				<integer>30</integer>
 			</dict>
-			<key>columnSelection</key>
-			<false/>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>64</integer>
-			<key>selectFrom</key>
-			<dict>
-				<key>column</key>
-				<integer>1</integer>
-				<key>line</key>
-				<integer>34</integer>
-			</dict>
-			<key>selectTo</key>
-			<dict>
-				<key>column</key>
-				<integer>52</integer>
-				<key>line</key>
-				<integer>35</integer>
-			</dict>
+			<integer>0</integer>
 		</dict>
 		<key>myDM.cc</key>
 		<dict>
@@ -164,44 +148,28 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>1</integer>
+				<integer>0</integer>
 				<key>line</key>
-				<integer>6</integer>
+				<integer>1</integer>
 			</dict>
-			<key>columnSelection</key>
-			<false/>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
 			<integer>0</integer>
-			<key>selectFrom</key>
-			<dict>
-				<key>column</key>
-				<integer>0</integer>
-				<key>line</key>
-				<integer>6</integer>
-			</dict>
-			<key>selectTo</key>
-			<dict>
-				<key>column</key>
-				<integer>2</integer>
-				<key>line</key>
-				<integer>6</integer>
-			</dict>
 		</dict>
 		<key>myPTM.hh</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>17</integer>
+				<integer>0</integer>
 				<key>line</key>
-				<integer>10</integer>
+				<integer>13</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>0</integer>
+			<integer>1</integer>
 		</dict>
 		<key>myScheduler.cc</key>
 		<dict>
