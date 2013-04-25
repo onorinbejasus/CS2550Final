@@ -31,6 +31,8 @@ class myPTM
         myPTM(vector < vector<string> > cT, int rM);
 		/* scheduler */
 		myScheduler *scheduler;	
+		int num_reads;
+		int num_writes;
 	
 	private:
 		

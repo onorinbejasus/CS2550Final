@@ -46,7 +46,7 @@ void *handleCommand(void *args){
 	int TID = myArgs.ID;
 	myPTM *myClass = myArgs.ptr;
 	int TID_type = myArgs.EMode;
-	int blocked = myArgs.blocked;
+	int TID_blocked = myArgs.blocked;
 		
 	while(!done){
 		
@@ -54,17 +54,13 @@ void *handleCommand(void *args){
 		bool empty = checkQueue(TID);
 		pthread_mutex_unlock( &queue_mutex[TID] );
 		
-		if (blocked != 0) {
-			if (blocked > timeOut) {
-				//Abort itself
-				//myClass->undoEffects(int TID);
-			}
-			blocked++;
-		}
-		else if(empty == false){
+		if(empty == false){
 			
 			stringstream ss;
 			ss << TID;
+			
+			stringstream em;
+			em << myArgs.EMode;
 			
 			pthread_mutex_lock( &queue_mutex[TID] );
 			string command =popQueue(TID);			
@@ -96,22 +92,28 @@ void *handleCommand(void *args){
 				TID_type = myArgs.EMode;
 			}
 			else {
+				//cout << em.str();
+				//cout << endl;
 				pthread_mutex_lock( &sched_log_mutex );
 				result = myClass->scheduler->handleCommand(TID, parsed_command, TID_type);
 				pthread_mutex_unlock( &sched_log_mutex );
 			}
 
 			if (result) {
-				blocked = 0;
 				if (parsed_command[0] == "R") {
 					//myDM.read(parse_command[2]);
+					myClass->num_reads++;
 				} 
-				if (parsed_command[0] == "W") {
+				else if (parsed_command[0] == "W") {
 					
+					myClass->num_writes++;
 				}
-			}
-			else {
-				blocked++;
+				else if (parsed_command[0] == "M") {
+					myClass->num_reads++;
+				}
+				else if (parsed_command[0] == "D") {
+					myClass->num_writes++;
+				}
 			}
 			
 			if(command.compare("done") == 0){
@@ -135,7 +137,8 @@ void *handleCommand(void *args){
 myPTM::myPTM(vector< vector<string> > cT, int rM):
 	currTrans(cT), readMode(rM)
 {
-			
+	num_writes = 0;
+	num_reads = 0;		
 	transactionLog.push_back(getTime() + " : Initializing Transaction Manager.");
 	transactionLog.push_back(getTime() + " : Initializing command queues, threads, iterators and mutexes.");
 	
@@ -423,6 +426,13 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 	pthread_mutex_unlock( &log_mutex );
 
 	cout << double( clock() - startTime ) / (double)CLOCKS_PER_SEC<< " seconds." << endl;
+	cout << num_reads;
+	cout << "  = number of reads.";
+	cout << endl;
+	cout << num_writes;
+	cout << "  = number of writes.";
+	cout << endl;
+	//cout << ((float) num_reads / (num_reads + num_writes) << " = percent reads" << endl;
 	/* writing transaction log out */
 	
 	ofstream log;
