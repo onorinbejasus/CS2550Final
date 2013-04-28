@@ -47,7 +47,7 @@ class myPTM
 		stringstream ss;
 			
 						
-		void parseCommands(string *script, int numCommands, int* id, int numScripts);
+		void parseCommands(string *script, int numCommands, int* id, int numScripts, int type);
 		void undoEffects(int TID);
 };
 
