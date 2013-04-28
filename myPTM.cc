@@ -116,11 +116,14 @@ void *handleCommand(void *args){
 				}
 			}
 			
+			cout << command << endl;
+			
 			if(command.compare("done") == 0){
 				pthread_mutex_lock( &log_mutex );
 				transactionLog.push_back(getTime() + " : Transaction Done, exiting thread: " + ss.str()); 
 				pthread_mutex_unlock( &log_mutex );
 				done = true;
+				break;
 			}
 			
 		}else{
@@ -318,6 +321,8 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 				commands.push_back("done");
 				ids.push_back(myIDS[0]);
 				
+				cout << "exit " << commands.size() << " " << ids.size() << endl;
+				
 				parseCommands( &commands[0], commands.size(), &ids[0], (int)ids.size() );
 				done = true;
 				break;
@@ -397,6 +402,7 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 				iter_swap( ids.begin() + (scriptSeed), ids.begin() + loop_size-1 );
 				
 				loop_size--;
+				
 			} // end if
 			
 			// if all scripts are removed, we are done
@@ -418,7 +424,6 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 	for(int i = 0; i < currTrans.size(); i++){
 		void *returnValue;
 		pthread_join(threads[i], &returnValue);
-		printf("index: %i %d\n", i, (intptr_t)returnValue);
 	}
 	
 	pthread_mutex_lock( &log_mutex );
@@ -461,14 +466,26 @@ void myPTM::parseCommands(string *script, int numCommands, int* id, int numScrip
 	// keep track of current script
 	// if random, only one script will be passed into here
 	int cur_script = 0;
-						
-	for(int i = 0; i < numCommands; i++){
+							
+	for(int i = 0; i < (numCommands); i++){
+		
+		cout << "before log " << endl;
+		
+		printf("cur: %d id: %d\n",i, cur_script);
+		
+		pthread_mutex_lock( &queue_mutex[cur_script] );
+		cout << (int) command_queue[ id[cur_script] ].size() << endl;
+		pthread_mutex_unlock( &log_mutex );
 		
 		pthread_mutex_lock( &log_mutex );
 		transactionLog.push_back(getTime() + " : Queuing command: " + script[i]); 
 		pthread_mutex_unlock( &log_mutex );
-		
+						
+		pthread_mutex_lock( &queue_mutex[cur_script] );
 		command_queue[ id[cur_script] ].push( script[i] );
+		pthread_mutex_unlock( &queue_mutex[cur_script] );
+		
+		cout << "after " << endl;
 		
 		// basically, if random
 		if(numScripts > 1) 
