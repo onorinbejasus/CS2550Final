@@ -5,6 +5,9 @@
 #include "time.h"
 #include <exception>
 #include <signal.h>
+#include <errno.h>
+
+//#define DEBUG
 
 int timeOut = 5; // wait 5 loops then kill myself
 struct thread_args
@@ -21,6 +24,8 @@ pthread_mutex_t *queue_mutex;
 
 pthread_mutex_t sched_log_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t myPTM_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+pthread_mutex_t mxq = PTHREAD_MUTEX_INITIALIZER;
 
 extern std::string getTime();
 
@@ -40,15 +45,46 @@ string popQueue(int TID){
 	return command;
 } // end pop
 
-void *kill(void *tid){
+int checkStatus(pthread_mutex_t *mtx, pthread_t id)
+{
+  switch(pthread_mutex_trylock(mtx)) {
+    case 0: /* if we got the lock, unlock and return 1 (true) */
+      pthread_mutex_unlock(mtx);
+		#ifdef DEBUG
+			pthread_mutex_lock( &print_mutex );
+			cout << "if we got the lock, unlock and return 1" << endl; 
+			pthread_mutex_unlock( &print_mutex );
+		#endif
+      return 1;
+    case EBUSY: /* return 0 (false) if the mutex was locked */
+	  	#ifdef DEBUG
+			pthread_mutex_lock( &print_mutex );
+			cout << "cancelling thread" << endl; 
+			pthread_mutex_unlock( &print_mutex );
+		#endif
+		pthread_cancel(id);
+      return 0;
+  }
+  return 1;
+}
+
+void *thread_kill(void *tid){
 	
-	pthread_t t = *(reinterpret_cast<pthread_t*>(tid));
+	pthread_t T = *(reinterpret_cast<pthread_t*>(tid));
 	
-	sleep(100);
-	pthread_kill(t, 0);	
+	int i = 0;  
+		
+	while( !checkStatus(&queue_mutex[i++%2], T) &&
+				!checkStatus(&print_mutex, T) &&
+					!checkStatus(&log_mutex, T) ) {}
 	
-	pthread_exit(NULL);
-	return 0;
+	#ifdef DEBUG
+		pthread_mutex_lock( &print_mutex );
+		cout << "out of loop" << endl; 
+		pthread_mutex_unlock( &print_mutex );
+	#endif
+	
+	  return NULL;
 }
 
 void *handleCommand(void *args){
@@ -86,28 +122,35 @@ void *handleCommand(void *args){
 			pthread_mutex_lock( &log_mutex );
 			transactionLog.push_back(getTime() + " : Popping command off stack: " + tt.str() + command); 
 			pthread_mutex_unlock( &log_mutex );
-		
-			pthread_mutex_lock( &print_mutex );
-			cout << "Popping command off stack " << TID << " " << command << endl; 
-			pthread_mutex_unlock( &print_mutex );
+			
+			#ifdef DEBUG
+				pthread_mutex_lock( &print_mutex );
+				cout << "Popping command off stack " << TID << " " << command << endl; 
+				pthread_mutex_unlock( &print_mutex );
+			#endif
 		
 			tt.clear();
 		
-			//pthread_mutex_lock( &print_mutex );
-			//cout << "thread id: " << pthread_self() << "command: " << command << endl;
-			//pthread_mutex_unlock( &print_mutex );
+			#ifdef DEBUG
+			
+				pthread_mutex_lock( &print_mutex );
+				cout << "thread id: " << pthread_self() << "command: " << command << endl;
+				pthread_mutex_unlock( &print_mutex );
 							
+			#endif
+			
     		istringstream iss(command);
 			string parsed_command[3];
+			
 			for (int i = 0; iss; i++) {
 				string sub;
 				iss >> sub;
 				parsed_command[i] = sub;
 			}
 			
-			//pthread_mutex_lock( &log_mutex );
-			//transactionLog.push_back(getTime() + " : Passing command to scheduler"); 
-			//pthread_mutex_unlock( &log_mutex );
+			pthread_mutex_lock( &log_mutex );
+			transactionLog.push_back(getTime() + " : Passing command to scheduler"); 
+			pthread_mutex_unlock( &log_mutex );
 			
 			bool result = false;
 			if (parsed_command[0] == "B") {
@@ -144,32 +187,57 @@ void *handleCommand(void *args){
 				}
 			}
 			
-			pthread_mutex_lock( &print_mutex );
-			cout << command << endl;
-			pthread_mutex_unlock( &print_mutex );
+			#ifdef DEBUG
+				pthread_mutex_lock( &print_mutex );
+				cout << command << endl;
+				pthread_mutex_unlock( &print_mutex );
+			#endif
 			
 			if(command.compare("done") == 0){
+			
+				#ifdef DEBUG
+					pthread_mutex_lock( &print_mutex );
+					cout << "parsed done " << endl;
+					pthread_mutex_unlock( &print_mutex );
+				#endif
 				
-				pthread_mutex_lock( &print_mutex );
-				cout << "parsed done " << endl;
-				pthread_mutex_unlock( &print_mutex );
 				
 				pthread_mutex_lock( &log_mutex );
 				transactionLog.push_back(getTime() + " : Transaction Done, exiting thread: " + tt.str()); 
 				pthread_mutex_unlock( &log_mutex );
 				
+				#ifdef DEBUG
+					pthread_mutex_lock( &print_mutex );
+					cout << "after transaction log" << endl;
+					pthread_mutex_unlock( &print_mutex );
+				#endif
+				
 				done = true;
-				break;
+				
 			}
 			
 		}else{
 			// continue to wait for input
 			continue;
 		}
+		
+		#ifdef DEBUG
+			pthread_mutex_lock( &print_mutex );
+			cout << "while loop" << endl;
+			pthread_mutex_unlock( &print_mutex );
+		#endif
+				
 	} // end while
 	
-	pthread_exit(NULL);
-	return 0;	
+	pthread_exit(0);
+	
+	#ifdef DEBUG
+		pthread_mutex_lock( &print_mutex );
+		cout << "before return" << endl;
+		pthread_mutex_unlock( &print_mutex );
+	#endif
+	
+	return 0;
 	
 } // end handleCommand
 
@@ -201,7 +269,13 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 	scheduler = new myScheduler(2000, currTrans.size());
 	transactionLog.push_back(getTime() + " : Initializing command iterators");
 	
-	cout << "number of scripts " << currTrans.size() << endl;
+	const int NUM_THREADS = (int)currTrans.size();
+	
+	#ifdef DEBUG
+		cout << "number of scripts " << currTrans.size() << endl;
+	#endif
+	
+	queue_mutex = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t) * NUM_THREADS);
 	
 	// assign the iterators to their corresponding scripts
 	for(int i = 0; i < currTrans.size(); i++){
@@ -358,12 +432,14 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 				
 				commands.push_back("done");
 				
-				//pthread_mutex_lock( &print_mutex );
-				//cout << "exit " << commands.size() << " " << ids.size() << endl;
-				//pthread_mutex_unlock( &print_mutex );
+				#ifdef DEBUG
+					pthread_mutex_lock( &print_mutex );
+					cout << "exit " << commands.size() << " " << ids.size() << endl;
+					pthread_mutex_unlock( &print_mutex );
+				#endif
 				
 				if(commands.size() > 0)
-					parseCommands( &commands[0], commands.size(), &myIDS[0], 1, 1);
+					parseCommands( &commands[0], commands.size(), new int(myIDS[0]), 1, 1);
 				
 				done = true;
 				break;
@@ -390,10 +466,12 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 			
 			commandSeed = rand() % (size - cur_index) + cur_index;
 			
-			pthread_mutex_lock( &log_mutex );
-			cout << "script seed " << scriptSeed << endl;
-			pthread_mutex_unlock( &log_mutex );
-										 
+			#ifdef DEBUG
+				pthread_mutex_lock( &log_mutex );
+				cout << "script seed " << scriptSeed << endl;
+				pthread_mutex_unlock( &log_mutex );
+			#endif
+			
 			/* watch for overflow */
 			if( (size - cur_index) < commandSeed)
 				commandSeed = ( size - cur_index);
@@ -419,11 +497,7 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 			// increment iterator
 			it[scriptSeed] += commandSeed;
 			
-			//pthread_mutex_lock( &print_mutex );
-			//cout << "size before parse: " << (int)ids.size() << endl;
-			//pthread_mutex_unlock( &print_mutex );
-			
-			parseCommands( &commands[0], (int)(commands.size()), &myIDS[scriptSeed], 1, 1);
+			parseCommands( &commands[0], (int)(commands.size()), new int(myIDS[scriptSeed]), 1, 1);
 			commands.clear();
 			ids.clear();
 			
@@ -434,6 +508,7 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 				
 				stringstream ss;
 				ss << scriptSeed;
+				
 				pthread_mutex_lock( &log_mutex );
 				transactionLog.push_back(getTime() + " : Command set: " + ss.str() + "has finished queuing"); 
 				pthread_mutex_unlock( &log_mutex );
@@ -470,12 +545,22 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 				
 	} // end else
 	
+	#ifdef DEBUG
+		pthread_mutex_lock( &print_mutex );
+		cout << "number fo threads" << NUM_THREADS << endl;
+		pthread_mutex_unlock( &print_mutex );
+	#endif
+		
 	/* wait for threads to join */
-	for(int i = 0; i < currTrans.size(); i++){
-		void *returnValue;
-		cout << "waiting on " << i << endl;
-	 
-		pthread_join(threads[i], &returnValue);		
+	for(int i = 0; i < NUM_THREADS-1; i++){
+		
+		#ifdef DEBUG
+			pthread_mutex_lock( &print_mutex );
+			cout << "waiting on " << i << endl;
+	 		pthread_mutex_unlock( &print_mutex );
+		#endif
+			
+		pthread_join(threads[i], NULL);	
 	}
 	
 	pthread_mutex_lock( &log_mutex );
@@ -512,12 +597,6 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 	log.close();
 }
 
-void SignalHandler(int signal)
-{
-    printf("Signal %d",signal);
-    throw "!Access Violation!";
-}
-
 void myPTM::parseCommands(string *script, int numCommands, int* id, int numScripts, int type){
 	
 	pthread_mutex_lock( &log_mutex );
@@ -528,42 +607,51 @@ void myPTM::parseCommands(string *script, int numCommands, int* id, int numScrip
 	// if random, only one script will be passed into here
 	int cur_script = 0;
 	
-	if(type == 1)
+	if(type == 1) // random
 		cur_script = *id;
 	
 	if(cur_script < 0)
 		return;
 	
-	pthread_mutex_lock( &print_mutex );
+	#ifdef DEBUG
+		pthread_mutex_lock( &print_mutex );
 
-	printf("num scripts: %i\n", numScripts);
-	printf("cur scripts: %i\n", cur_script);
+		printf("num scripts: %i\n", numScripts);
+		printf("cur scripts: %i\n", cur_script);
 		
-	pthread_mutex_unlock( &print_mutex );
+		pthread_mutex_unlock( &print_mutex );
+	#endif
 	
 	for(int i = 0; i < (numCommands); i++){
 		
-		//pthread_mutex_lock( &print_mutex );
-		//cout << "before log " << endl;
-		//printf("cur: %d id: %d\n",i, cur_script);
-		//pthread_mutex_unlock( &print_mutex );
-		
-		//pthread_mutex_lock( &print_mutex );	
-		//cout << getTime() << " : Queuing command: " << script[i] << endl;
-		//pthread_mutex_unlock( &print_mutex );
+		#ifdef DEBUG	
+			pthread_mutex_lock( &print_mutex );
+			cout << "before log " << endl;
+			printf("cur: %d id: %d\n",i, cur_script);		
+			cout << getTime() << " : Queuing command: " << script[i] << endl;
+			pthread_mutex_unlock( &print_mutex );
+		#endif
 		
 		pthread_mutex_lock( &log_mutex );
 		transactionLog.push_back(getTime() + " : Queuing command: " + script[i]); 
 		pthread_mutex_unlock( &log_mutex );
 		
-		pthread_mutex_lock( &queue_mutex[cur_script] );
-		string S = script[i];
-		command_queue[ id[cur_script] ].push( S );
-		pthread_mutex_unlock( &queue_mutex[cur_script] );	 
-							
-		//pthread_mutex_lock( &print_mutex );
-		//cout << "after " << endl;
-		//pthread_mutex_unlock( &print_mutex );
+		if(type == 0){ // RR
+			pthread_mutex_lock( &queue_mutex[cur_script] );
+			command_queue[ id[cur_script] ].push( script[i] );
+			pthread_mutex_unlock( &queue_mutex[cur_script] );	 
+		}	
+		else{ // random
+			pthread_mutex_lock( &queue_mutex[cur_script] );
+			command_queue[ cur_script ].push( script[i] );
+			pthread_mutex_unlock( &queue_mutex[cur_script] );
+		}
+		
+		#ifdef DEBUG
+			pthread_mutex_lock( &print_mutex );
+			cout << "after " << endl;
+			pthread_mutex_unlock( &print_mutex );
+		#endif
 		
 		// basically, if random
 		if(type == 0) 
