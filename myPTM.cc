@@ -158,11 +158,10 @@ void *handleCommand(void *args){
 				TID_type = myArgs.EMode;
 			}
 			else {
-				pthread_mutex_lock( &sched_log_mutex );
 				struct args temp = {myArgs.ID, myArgs.EMode,myArgs.blocked};
+				pthread_mutex_lock( &sched_log_mutex );
 				result = myClass->scheduler->handleCommand(TID, parsed_command, 
 					TID_type, temp );
-				
 				pthread_mutex_unlock( &sched_log_mutex );
 			}
 			

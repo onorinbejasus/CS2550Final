@@ -31,7 +31,7 @@ myScheduler::myScheduler(int dT, int nT):
 
 bool myScheduler::handleCommand(int TID, string parsedCommand[], int TID_type, struct args myArgs) 
 {
-		
+		cout << "inside handle" << endl;
 		// used to output TID to log
 		stringstream ss;
 		ss << TID;
@@ -42,11 +42,14 @@ bool myScheduler::handleCommand(int TID, string parsedCommand[], int TID_type, s
 		// Command is read/mult_read/write/delete 
 		if (base == "R" || base == "M" || base == "W" || base == "D") {
 			
+			cout << "base equals: " << base << endl;
 			// TODO -- find file corresponding to ID
 			
 			if(base == "D" || base == "M"){ // need to check for file locks
 				
 				tr1::unordered_map<string, struct file_lock>::const_iterator got_file = file_locks.find("fixed.txt");
+				
+				cout << base << endl;
 				
 				if(got_file != file_locks.end() && got_file->second.blocked == false)
 				{
@@ -65,10 +68,11 @@ bool myScheduler::handleCommand(int TID, string parsedCommand[], int TID_type, s
 				} // end else
 				
 			} // end if file lock
-			
-			if (checkGetLock(TID, base.substr(0,1), myArgs.EMode, "fixed.txt", myArgs.ID ) ) 
+			cout << "check get lock " << endl;
+			if (checkGetLock(TID, base, myArgs.EMode, "fixed.txt", myArgs.ID ) ) 
 			{
 				
+				cout << " already has lock for command: " << endl;
 				// Pass on to Data Manager
 				schedulerLog.push_back(ss.str() + " already has lock for command: " + base + " on " + one);
 				
@@ -80,6 +84,7 @@ bool myScheduler::handleCommand(int TID, string parsedCommand[], int TID_type, s
 		
 			// TID doesn't have lock
 			else {
+				
 				bool lockStatus = reqLock(base,TID, myArgs.EMode, one, "fixed.txt"); 
 				
 				if (!lockStatus){ // blocking
@@ -113,11 +118,13 @@ bool myScheduler::handleCommand(int TID, string parsedCommand[], int TID_type, s
 						pair <int,struct record_lock> myPair;
 						myPair = make_pair (TID,rec);
 						
+						cout << "no record for this yet" << base << " on " << one << endl;
+						
 						got_file->second.record_locks->insert(myPair);
 						
-					}
+					} // end if not end
 							
-					schedulerLog.push_back(ss.str() + " obtains lock for command: " + base + " on " + one);
+					//schedulerLog.push_back(ss.str() + " obtains lock for command: " + base + " on " + one);
 					
 					// Pass on to Data Manager
 					// need DM call HERE
@@ -132,7 +139,7 @@ bool myScheduler::handleCommand(int TID, string parsedCommand[], int TID_type, s
 		else if (base == "C" || base == "A") 
 		{
 			// Pass on to Data Manager
-			releaseLocks(TID, "fixed.txt");
+			//releaseLocks(TID, "fixed.txt");
 			return true;
 		} // End is commit/abort
 		
@@ -147,6 +154,11 @@ bool myScheduler::handleCommand(int TID, string parsedCommand[], int TID_type, s
 void myScheduler::releaseLocks(int TID, string filename) 
 {
 	tr1::unordered_map<string, struct file_lock>::const_iterator got_file = file_locks.find(filename);
+	if(got_file == file_locks.end()){
+		cout << "nothing stored" << endl;
+		return;
+	}
+	
 	tr1::unordered_map<int, struct record_lock>::const_iterator got_rec = got_file->second.record_locks->find(TID);
 	
 	if(got_rec != got_file->second.record_locks->end()){
@@ -156,7 +168,7 @@ void myScheduler::releaseLocks(int TID, string filename)
 	}
 }
 
-void myScheduler::releaseLock(int TID, string filename) {
+//void myScheduler::releaseLock(int TID, string filename) {
 	
 	// tr1::unordered_map<string, struct file_lock>::const_iterator got_file = file_locks.find(filename);
 	// tr1::unordered_map<int, struct record_lock>::const_iterator got_rec = got_file->second.record_locks->find(TID);
@@ -173,7 +185,7 @@ void myScheduler::releaseLock(int TID, string filename) {
 	// 
 	// got_rec->second.currList->push(n);
  
-}
+//}
 
 //@TODO -- RIGHT NOW ONLY RETURNS TRUE
 bool myScheduler::checkGetLock(int TID, string base, bool process, string filename, int recordID) {
@@ -201,18 +213,20 @@ bool myScheduler::checkLock(string type, int TID,  string dataItem)
 bool myScheduler::reqLock(string type, int TID, int mode, string dataItem, string filename)
 {
 	// lock found in all, now check intention
-	
+	cout << "req Lock " << endl;
 	tr1::unordered_map<string, struct file_lock>::const_iterator got_file = file_locks.find(filename);
 	
-	bool ret = false;
+	bool penis = false;
 	
 	if(file_locks.empty()){  // first one
 		
+		cout << "empty" << endl;
 		
 		struct record_lock rec_temp;// = {&rec1, &rec2 };
 		
 		tr1::unordered_map<int, struct record_lock> *temp_map;
 		pair <int,struct record_lock> myPair;
+		temp_map = new tr1::unordered_map<int, struct record_lock>();
 		myPair = make_pair (TID, rec_temp);	
 		temp_map->insert(myPair); 
 		
@@ -227,21 +241,21 @@ bool myScheduler::reqLock(string type, int TID, int mode, string dataItem, strin
 		myPair1 = make_pair (filename, temp_file);
 		file_locks.insert(myPair1);
 		
-		ret = true;
+		penis = true;
 
 	} // end if 
 	else{ // we need to search 
 		
 		tr1::unordered_map<string, struct file_lock>::const_iterator got_file = file_locks.find(filename);
 		if(got_file == file_locks.end())
-			ret = true;
+			penis = true;
 	
 		tr1::unordered_map<int, struct record_lock>::const_iterator got_rec = got_file->second.record_locks->find(TID);
 		if(got_rec != got_file->second.record_locks->end())
-			ret = false;
+			penis = false;
 	}
 		
-	return ret;
+	return penis;
 } // end req
 
 // Use the wfgMatrix to detect deadlocks

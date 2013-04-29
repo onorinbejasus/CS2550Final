@@ -68,7 +68,7 @@ class myScheduler
 				bool checkLock(string type, int TID,  string dataItem);
 				bool reqLock(string type, int TID, int mode, string dataItem, string filename);
 				void releaseLocks(int TID, string filename);
-				void releaseLock(int TID, string filename);
+				//void releaseLock(int TID, string filename);
 				vector<string> currDataFiles;
 				
 				tr1::unordered_map<string, struct file_lock> file_locks; // locks at file level
