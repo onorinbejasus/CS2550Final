@@ -87,7 +87,7 @@ int myDM::write(tuple newTuple) {
 
 // Delete filename -- basically clears all the tuples
 int myDM::deleteData() {
-	
+	hash_index.clear();
 	tuple_list.clear();
 	datafile.clear();
 	return 1;
