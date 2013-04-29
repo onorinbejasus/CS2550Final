@@ -87,7 +87,9 @@ int myDM::write(tuple newTuple) {
 
 // Delete filename -- basically clears all the tuples
 int myDM::deleteData() {
+	
 	tuple_list.clear();
+	datafile.clear();
 	return 1;
 }
 
