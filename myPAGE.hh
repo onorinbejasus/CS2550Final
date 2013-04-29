@@ -18,7 +18,7 @@ struct tuple{
 	int ID; // unique
 	int AreaCode; 
 	string ClientName;
-	char Phone[12];
+	string Phone;
 };
 
 class Page

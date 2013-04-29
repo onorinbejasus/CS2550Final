@@ -136,7 +136,9 @@ void myDM::loadTuples() {
 				new_tuple.AreaCode = atoi(parsed_line[2].substr(1,3).c_str() );
 			
 				new_tuple.ClientName = string(parsed_line[1]);
-				strncpy(new_tuple.Phone, parsed_line[2].c_str(), strlen(parsed_line[2].c_str()) );
+				new_tuple.Phone = string(parsed_line[2]);
+				
+				//strncpy(new_tuple.Phone, parsed_line[2].c_str(), strlen(parsed_line[2].c_str()) );
 			
 				// cout << "ID:" << new_tuple.ID << "\n";
 				// cout << "Area Code:" << new_tuple.AreaCode << "\n";
