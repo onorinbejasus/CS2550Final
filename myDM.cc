@@ -89,7 +89,16 @@ int myDM::write(tuple newTuple) {
 int myDM::deleteData() {
 	hash_index.clear();
 	tuple_list.clear();
-	datafile.clear();
+	
+	datafile.seekg(0, ios::end);
+	int size = teelg();
+	datafile.seekg(0, ios::begin);
+	
+	for(int i = 0; i < size; i++)
+		dataFile << '\0';
+		
+	//datafile.clear();
+	
 	return 1;
 }
 
