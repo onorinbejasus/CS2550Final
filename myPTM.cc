@@ -169,7 +169,7 @@ void *handleCommand(void *args){
 			
 			if (result) {
 				if (parsed_command[0] == "R") {
-					//myClass->dm->read(atoi(parsed_command[2].c_str()));
+					myClass->dm->read(atoi(parsed_command[2].c_str()));
 					pthread_mutex_lock( &myPTM_mutex );
 					myClass->num_reads++;
 					pthread_mutex_unlock( &myPTM_mutex );
@@ -183,13 +183,13 @@ void *handleCommand(void *args){
 				else if (parsed_command[0] == "M") {
 					pthread_mutex_lock( &myPTM_mutex );
 					//@TODO
-					//myClass->dm->multRead(0);
+					myClass->dm->multRead(0);
 					myClass->num_reads++;
 					pthread_mutex_unlock( &myPTM_mutex );
 				}
 				else if (parsed_command[0] == "D") {
 					pthread_mutex_lock( &myPTM_mutex );
-					//myClass->dm->deleteData();
+					myClass->dm->deleteData();
 					myClass->num_writes++;
 					pthread_mutex_unlock( &myPTM_mutex );
 				}
@@ -276,7 +276,7 @@ myPTM::myPTM(vector< vector<string> > cT, int rM, int s_mode, int max_r, int nBP
 	scheduler = new myScheduler(2000, currTrans.size());
 	transactionLog.push_back(getTime() + " : Initializing command iterators");
 	
-	//dm = new myDM(s_mode, max_r, nBP, dF);
+	dm = new myDM(s_mode, max_r, nBP, dF);
 	
 	const int NUM_THREADS = (int)currTrans.size();
 	
