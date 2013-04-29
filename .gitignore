@@ -16,3 +16,5 @@ main
 .DS_Store
 
 *.txt
+
+main.cc

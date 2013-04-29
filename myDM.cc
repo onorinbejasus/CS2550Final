@@ -127,6 +127,7 @@ void myDM::loadTuples() {
 			string sub;
 			string parsed_line[3];
 			int i;
+			
 			// Assuming of format: 753, Seras, 482-626-6836 (', ' between each)
 			for(i = 0; getline(iss,sub,','); i++) {
 				parsed_line[i] = sub;

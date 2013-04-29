@@ -83,7 +83,6 @@ void *thread_kill(void *tid){
 		cout << "out of loop" << endl; 
 		pthread_mutex_unlock( &print_mutex );
 	#endif
-	
 	  return NULL;
 }
 
@@ -98,7 +97,7 @@ void *handleCommand(void *args){
 	int TID = myArgs.ID;
 	myPTM *myClass = myArgs.ptr;
 	int TID_type = myArgs.EMode;
-	int TID_blocked = myArgs.blocked;
+	//int TID_blocked = myArgs.blocked;
 		
 	while(!done){
 		
@@ -201,7 +200,6 @@ void *handleCommand(void *args){
 					pthread_mutex_unlock( &print_mutex );
 				#endif
 				
-				
 				pthread_mutex_lock( &log_mutex );
 				transactionLog.push_back(getTime() + " : Transaction Done, exiting thread: " + tt.str()); 
 				pthread_mutex_unlock( &log_mutex );
@@ -229,8 +227,7 @@ void *handleCommand(void *args){
 				
 	} // end while
 	
-	int ret = 0;
-	pthread_exit(&ret);
+	pthread_exit(NULL);
 	
 	#ifdef DEBUG
 		pthread_mutex_lock( &print_mutex );
@@ -279,7 +276,7 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 	queue_mutex = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t) * NUM_THREADS);
 	
 	// assign the iterators to their corresponding scripts
-	for(int i = 0; i < currTrans.size(); i++){
+	for(int i = 0; i < (int)currTrans.size(); i++){
 		
 		vector<string>::iterator myIt = (currTrans.at(i)).begin();
 		it.push_back(myIt);	
@@ -551,27 +548,25 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 		cout << "number fo threads " << NUM_THREADS << endl;
 		pthread_mutex_unlock( &print_mutex );
 	#endif
-	
-	//int *ptr;
-	
-	/* wait for threads to join */
-	for(int i = 0; i < NUM_THREADS; i++){
-	
-		#ifdef DEBUG
-			pthread_mutex_lock( &print_mutex );
-			cout << "waiting on " << i << endl;
-	 		pthread_mutex_unlock( &print_mutex );
-		#endif
-			
-		pthread_join(threads[i], NULL);	
 		
-		#ifdef DEBUG
-			pthread_mutex_lock( &print_mutex );
-			printf("\n return value from first thread is [%d]\n", *ptr);
-			pthread_mutex_unlock( &print_mutex );
-		#endif
-	    
-	}
+	/* wait for threads to join */
+	// for(int i = 0; i < NUM_THREADS-1; i++){
+	// 
+	// 	#ifdef DEBUG
+	// 		pthread_mutex_lock( &print_mutex );
+	// 		cout << "waiting on " << i << endl;
+	//  		pthread_mutex_unlock( &print_mutex );
+	// 	#endif
+	// 		
+	// 	pthread_join(threads[i], NULL );	
+	// 	
+	// 	#ifdef DEBUG
+	// 		pthread_mutex_lock( &print_mutex );
+	// 		printf("\n return value from first thread is [%d]\n", *ptr);
+	// 		pthread_mutex_unlock( &print_mutex );
+	// 	#endif
+	//     
+	// }
 	
 	pthread_mutex_lock( &log_mutex );
 	transactionLog.push_back(getTime() + " : All scripts complete");

@@ -10,7 +10,6 @@ Page::Page()
 /* insert tuple into page */
 void Page::insertTuple(struct tuple tup)
 {
-	
 	// insert into tuple into page
 	tuples.push_back(tup);
 	ids.push_back(tup.ID);
