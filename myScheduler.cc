@@ -139,7 +139,7 @@ bool myScheduler::handleCommand(int TID, string parsedCommand[], int TID_type, s
 		else if (base == "C" || base == "A") 
 		{
 			// Pass on to Data Manager
-			releaseLocks(TID, "fixed.txt");
+			//releaseLocks(TID, "fixed.txt");
 			return true;
 		} // End is commit/abort
 		
