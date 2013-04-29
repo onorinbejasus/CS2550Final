@@ -16,6 +16,7 @@ using namespace std;
 struct tuple{
 
 	int ID; // unique
+	int AreaCode; 
 	char ClientName[18];
 	char Phone[12];
 };
