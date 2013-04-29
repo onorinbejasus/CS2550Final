@@ -38,20 +38,40 @@ bool myScheduler::handleCommand(int TID, string parsedCommand[], int TID_type, s
 		string base = parsedCommand[0]; // base command
 		string one = parsedCommand[1]; // 1st substring -- filename/Emode
 		string two = parsedCommand[2]; // 2nd substring -- val / record
-		
-		cout << "1:" << parsedCommand[1] << " 2:" << parsedCommand[2] << endl;
-		
+				
 		// Command is read/mult_read/write/delete 
 		if (base == "R" || base == "M" || base == "W" || base == "D") {
-			// TID has necessary lock
 			
 			// TODO -- find file corresponding to ID
+			
+			if(base == "D" || base == "M"){ // need to check for file locks
+				
+				tr1::unordered_map<string, struct file_lock>::const_iterator got_file = file_locks.find("fixed.txt");
+				
+				if(got_file != file_locks.end() && got_file->second.blocked == false)
+				{
+					struct lock_tuple lock = { TID, base, true, myArgs.EMode };
+					
+					got_file->second.currList->push_back(lock);
+				
+				//	got_file->second.blocked = true;
+					
+				}else if (got_file != file_locks.end() && got_file->second.blocked){
+					
+						struct lock_tuple lock = { TID, base, true, myArgs.EMode};
+						got_file->second.waitList->push_back(lock);				
+							
+				} // end else
+				
+			} // end if file lock
 			
 			if (checkGetLock(TID, base.substr(0,1), myArgs.EMode, "fixed.txt", myArgs.ID ) ) 
 			{
 				
 				// Pass on to Data Manager
 				schedulerLog.push_back(ss.str() + " already has lock for command: " + base + " on " + one);
+				
+				// add DM here
 				
 				return true;
 			
@@ -65,17 +85,41 @@ bool myScheduler::handleCommand(int TID, string parsedCommand[], int TID_type, s
 					
 					schedulerLog.push_back(ss.str() + " blocked on lock for command: " + base + " on " + one);
 					
+					tr1::unordered_map<string, struct file_lock>::const_iterator got_file = file_locks.find("fixed.txt");
+					tr1::unordered_map<int, struct record_lock>::const_iterator got_rec = got_file->second.record_locks->find(TID);
+					
+					/* add to the wait list */
+					struct lock_tuple wait = { TID, base, true, myArgs.EMode};
+					got_rec->second.waitList->push_back(wait);
+										
 					return false;
 					
 				}else { // add locks to table
 					
+					tr1::unordered_map<string, struct file_lock>::const_iterator got_file = file_locks.find("fixed.txt");
+					tr1::unordered_map<int, struct record_lock>::const_iterator got_rec = got_file->second.record_locks->find(TID);
 					
+					if(got_rec == got_file->second.record_locks->end()){ // no record for it yet
+						
+						struct lock_tuple curr = { TID, base, false, myArgs.EMode};
+						
+						struct record_lock rec = {new vector<struct lock_tuple>(), new vector<struct lock_tuple>()};
+						rec.currList->push_back(curr);
+						
+						pair <int,struct record_lock> myPair;
+						myPair = make_pair (TID,rec);
+						
+						got_file->second.record_locks->insert(myPair);
+						
+					}
+							
 					schedulerLog.push_back(ss.str() + " obtains lock for command: " + base + " on " + one);
 					
 					// Pass on to Data Manager
-					// need DM call
+					// need DM call HERE
 					
 					return true;
+					
 				} // else
 				
 			} // end else TID tries to get lock	
@@ -84,7 +128,7 @@ bool myScheduler::handleCommand(int TID, string parsedCommand[], int TID_type, s
 		else if (base == "C" || base == "A") 
 		{
 			// Pass on to Data Manager
-			releaseLocks(TID);
+			releaseLocks(TID, "fixed.txt");
 			return true;
 		} // End is commit/abort
 		
@@ -96,9 +140,32 @@ bool myScheduler::handleCommand(int TID, string parsedCommand[], int TID_type, s
 }
 
 // Release the locks that TID has
-void myScheduler::releaseLocks(int TID) 
+void myScheduler::releaseLocks(int TID, string filename) 
 {
-	//locks[TID].clear();
+	tr1::unordered_map<string, struct file_lock>::const_iterator got_file = file_locks.find(filename);
+	tr1::unordered_map<int, struct record_lock>::const_iterator got_rec = got_file->second.record_locks->find(TID);
+	
+	if(got_rec != got_file->second.record_locks->end())
+		got_file->second.record_locks->erase(TID);
+}
+
+void myScheduler::releaseLock(int TID, string filename) {
+	
+	// tr1::unordered_map<string, struct file_lock>::const_iterator got_file = file_locks.find(filename);
+	// tr1::unordered_map<int, struct record_lock>::const_iterator got_rec = got_file->second.record_locks->find(TID);
+	// 
+	// if(got_rec == got_file->second.record_locks->end())
+	// 	return;
+	// 	
+	// got_rec->second.currList->erase(TID);
+	// 
+	// struct lock_tuple n = got_rec.waitList->at(0);
+	// got_rec->second.waitList->erase(TID);
+	// 
+	// n.blocked = false;
+	// 
+	// got_rec->second.currList->push(n);
+ 
 }
 
 //@TODO -- RIGHT NOW ONLY RETURNS TRUE
@@ -110,7 +177,9 @@ bool myScheduler::checkGetLock(int TID, string base, bool process, string filena
 		
 	tr1::unordered_map<string, struct file_lock>::const_iterator got_file = file_locks.find(filename);
 	
-	 if(got_file == file_locks.end()) {// not added yet
+	tr1::unordered_map<int, struct record_lock>::const_iterator got_rec = got_file->second.record_locks->find(TID);
+	
+	 if(got_rec == got_file->second.record_locks->end()) {// not added yet
 	 	return false;
 	 }
 	 
@@ -126,23 +195,38 @@ bool myScheduler::reqLock(string type, int TID, int mode, string dataItem, strin
 {
 	// lock found in all, now check intention
 	
-	if(file_locks.empty()){  // first one
+	tr1::unordered_map<string, struct file_lock>::const_iterator got_file = file_locks.find(filename);
+	
+	if(got_file->second.record_locks->empty()){  // first one
 		
-		struct record_lock rec_temp = {new queue<struct lock_tuple> , new queue<struct lock_tuple> };
+		struct record_lock rec_temp = {new vector<struct lock_tuple>(), new vector<struct lock_tuple>() };
 		
-		tr1::unordered_map<int, struct record_lock> temp_map;
+		tr1::unordered_map<int, struct record_lock> *temp_map;
 		pair <int,struct record_lock> myPair;
 		myPair = make_pair (TID,rec_temp);	
-		temp_map.insert(myPair); 
+		temp_map->insert(myPair); 
 		
-		struct file_lock temp_file = {temp_map, new queue<struct lock_tuple> , new queue<struct lock_tuple>};
+		struct file_lock temp_file = {temp_map, new vector<struct lock_tuple>() , new vector<struct lock_tuple>(), false};
 		pair <string,struct file_lock> myPair1;		
 		myPair1 = make_pair (filename, temp_file);
 		file_locks.insert(myPair1);
+		
+		return true;
 
 	} // end if 
+	else{ // we need to search 
 		
-	return false;
+		tr1::unordered_map<string, struct file_lock>::const_iterator got_file = file_locks.find(filename);
+		if(got_file == file_locks.end())
+			return true;
+	
+		tr1::unordered_map<int, struct record_lock>::const_iterator got_rec = got_file->second.record_locks->find(TID);
+		if(got_rec != got_file->second.record_locks->end())
+			return false;
+		
+	}
+		
+	return true;
 } // end req
 
 // Use the wfgMatrix to detect deadlocks
@@ -156,7 +240,7 @@ void myScheduler::detectDeadlock()
 		int TID = 0;
 		// Let TM know to abort transaction
 		// Let DB know about aborted transaction
-		releaseLocks(TID);
+		releaseLocks(TID, "fixed.txt");
 		// Update time between detections
 		detectTime = detectTime/2;
 	}

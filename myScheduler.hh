@@ -36,14 +36,16 @@ struct lock_tuple {
 };
 // int record id is key
 struct record_lock {
-	queue <struct lock_tuple> *waitList; // TIDs waiting for this record lock
-	queue <struct lock_tuple> *currList; // TIDs currently holding this record lock
+	vector <struct lock_tuple> *waitList; // TIDs waiting for this record lock
+	vector <struct lock_tuple> *currList; // TIDs currently holding this record lock
 };
 // string filename is key
 struct file_lock {
-	tr1::unordered_map<int, struct record_lock> record_locks; // locks at record level
-	queue <struct lock_tuple> *waitList; // TIDs waiting for this file lock
-	queue <struct lock_tuple> *currList; // TIDs currently holding this file lock
+	tr1::unordered_map<int, struct record_lock> *record_locks; // locks at record level
+	vector <struct lock_tuple> *waitList; // TIDs waiting for this file lock
+	vector <struct lock_tuple> *currList; // TIDs currently holding this file lock
+	bool blocked;
+	
 };
 
 
@@ -63,7 +65,8 @@ class myScheduler
         void detectDeadlock();
 				bool checkLock(string type, int TID,  string dataItem);
 				bool reqLock(string type, int TID, int mode, string dataItem, string filename);
-				void releaseLocks(int TID);
+				void releaseLocks(int TID, string filename);
+				void releaseLock(int TID, string filename);
 				vector<string> currDataFiles;
 				
 				tr1::unordered_map<string, struct file_lock> file_locks; // locks at file level
