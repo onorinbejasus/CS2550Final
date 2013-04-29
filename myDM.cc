@@ -11,18 +11,19 @@ myDM::myDM(int searchMode, int maxRecords, int numPages, string file):
 {
 	// int(10 digits) + name(18) + phone(12) + (', 'x2)
 	tuple_length = 44;
-	// Open data file
-	datafile.open(filename.c_str(), fstream::in | fstream::out);
-	
 	// Load tuples into tuple_list
 	loadTuples();
-	// struct tuple test_tuple = tuple_list[2];
-	// //cout << "tuple_list[2] = " << test_tuple.ID << ", " << test_tuple.ClientName << "\n";
-	// test_tuple.ID = 2;
-	// string test = "Clarice";
-	// strcpy(test_tuple.ClientName, test.c_str());
-	// write(test_tuple);
-	// datafile.close();
+	
+		// Open data file
+	datafile.open(filename.c_str(), fstream::in | fstream::out);
+		if (datafile.is_open()) {
+			struct tuple test_tuple = tuple_list[2];
+			cout << tuple_list[2].Phone << "\n";
+			cout << test_tuple.Phone << "\n";
+			test_tuple.ClientName.assign(" Clarice");
+			//write(test_tuple);
+		}
+	datafile.close();
 }
 
 /*** Data operation functions ***/
@@ -65,18 +66,16 @@ int myDM::write(tuple newTuple) {
 	// Found = overwrite
 	else {
 		num = hash_index[newTuple.ID]+1;
-		//int jump = hash_index[newTuple.ID];
-		//cout << "hash_index[newTuple.ID] = " << hash_index[newTuple.ID] << "| jump=" << jump << "\n";
 	}
 	
 	goToLine(num);
-	// datafile.seekg(ios::beg);
-	// for(int i=0; i < num - 1; ++i){
-	//     datafile.ignore(numeric_limits<streamsize>::max(),'\n');
-	// }
-	// datafile.seekp(datafile.tellg());
-	datafile << newTuple.ID << ", " << newTuple.ClientName << ", " << newTuple.Phone << "\n";
-	//cout << newTuple.ID << ", " << newTuple.ClientName << "," << newTuple.Phone << "\n";
+	stringstream ss;
+	ss << newTuple.ID << "," << newTuple.ClientName << "," << newTuple.Phone;
+	cout << newTuple.Phone << "\n";
+	string str = ss.str();
+	str.append(tuple_length - str.length(), ' ');
+	str.append(1, '\n');
+	datafile << str;
 	return 1;
 }
 
@@ -90,29 +89,28 @@ int myDM::deleteData() {
 void myDM::loadTuples() {
 	string values; 
 
+	fstream data;
+	data.open(filename.c_str(), fstream::in | fstream::out);
 	FILE * fixedfile = fopen("fixed.txt", "w");
-	// char nl[2] = {'\n'};
-	// char sep[3] = {',', ' '};
 	
-	if (datafile.is_open()) {
+	if (data.is_open()) {
 		
-		datafile.seekg(0, ios::end);
+		data.seekg(0, ios::end);
 		
-		int size = datafile.tellg();
+		int size = data.tellg();
 		
 		if(size == 0){
 			cout << "size is 0" << endl;
 			
-			datafile.close();
+			data.close();
 			return;
 			
 		}
 					
 		values.reserve(size);
-		datafile.seekg(0, std::ios::beg);
+		data.seekg(0, std::ios::beg);
 		
-		values.assign((std::istreambuf_iterator<char>(datafile)), std::istreambuf_iterator<char>());
-		//datafile.close();
+		values.assign((std::istreambuf_iterator<char>(data)), std::istreambuf_iterator<char>());
 		
 		istringstream lines(values.c_str());
 		string line;
@@ -122,47 +120,44 @@ void myDM::loadTuples() {
 		
 		while(!lines.eof()) {
 			getline(lines, line);
-			//cout << line << "\n";
-			istringstream iss(line);
-			string sub;
-			string parsed_line[3];
-			int i;
+			if(lines.str().compare("\n") != 0) {
+				istringstream iss(line);
+				string sub;
+				string parsed_line[3];
+				int i;
 			
-			// Assuming of format: 753, Seras, 482-626-6836 (', ' between each)
-			for(i = 0; getline(iss,sub,','); i++) {
-				parsed_line[i] = sub;
-			}
-			//cout << "==========\n";
+				// Assuming of format: 753, Seras, 482-626-6836 (', ' between each)
+				for(i = 0; getline(iss,sub,','); i++) {
+					parsed_line[i] = sub;
+				}
 						
-			// Set new_tuple elements (ID, AreaCode, ClientName, Phone)
-			new_tuple.ID = atoi(parsed_line[0].c_str());
-			new_tuple.AreaCode = atoi(parsed_line[2].substr(1,3).c_str() );
+				// Set new_tuple elements (ID, AreaCode, ClientName, Phone)
+				new_tuple.ID = atoi(parsed_line[0].c_str());
+				new_tuple.AreaCode = atoi(parsed_line[2].substr(1,3).c_str() );
 			
-			new_tuple.ClientName = string(parsed_line[1]);
-			//strncpy(new_tuple.ClientName, parsed_line[1].c_str(), strlen(parsed_line[1].c_str()) );
+				new_tuple.ClientName = string(parsed_line[1]);
+				strncpy(new_tuple.Phone, parsed_line[2].c_str(), strlen(parsed_line[2].c_str()) );
 			
-			strncpy(new_tuple.Phone, parsed_line[2].c_str(), strlen(parsed_line[2].c_str()) );
+				// cout << "ID:" << new_tuple.ID << "\n";
+				// cout << "Area Code:" << new_tuple.AreaCode << "\n";
+				// cout << "new_tuple.ClientName:" << new_tuple.ClientName << "\n";
+				// cout << "parsed line:" << parsed_line[2].c_str() << "\n";
 			
-			// cout << "ID:" << new_tuple.ID << "\n";
-			// cout << "Area Code:" << new_tuple.AreaCode << "\n";
-			// cout << "new_tuple.ClientName:" << new_tuple.ClientName << "\n";
-			// cout << "parsed line:" << parsed_line[2].c_str() << "\n";
+				// Insert into hash_index and tuple_list
+				hash_index.insert(make_pair<int,int>(new_tuple.ID,j));
+				tuple_list.insert(make_pair<int,struct tuple>(new_tuple.ID,new_tuple));
+				j++;
 			
-			// Insert into hash_index and tuple_list
-			hash_index.insert(make_pair<int,int>(new_tuple.ID,j));
-			tuple_list.insert(make_pair<int,struct tuple>(new_tuple.ID,new_tuple));
-			j++;
-			
-			stringstream ss;
-			ss << new_tuple.ID << "," << new_tuple.ClientName << "," << new_tuple.Phone;
-			string str = ss.str();
-			str.append(tuple_length - str.length(), ' ');
-			str.append(1, '\n');
-			//cout << str.c_str();
-			fwrite(str.c_str(),sizeof(char),strlen(str.c_str()),fixedfile);
-			ss.str("");
-			ss.str().clear();
-			str.clear();
+				stringstream ss;
+				ss << new_tuple.ID << "," << new_tuple.ClientName << "," << new_tuple.Phone;
+				string str = ss.str();
+				str.append(tuple_length - str.length(), ' ');
+				str.append(1, '\n');
+				fwrite(str.c_str(),sizeof(char),strlen(str.c_str()),fixedfile);
+				ss.str("");
+				ss.str().clear();
+				str.clear();
+			}
 		}
 		next_line = j;
 		
@@ -171,6 +166,8 @@ void myDM::loadTuples() {
 		cout << "Unable to open data file: " << filename << " in load()\n";
 	}
 	fclose(fixedfile);
+	data.close();
+	system("cp fixed.txt X.txt");
 }
 
 
