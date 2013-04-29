@@ -65,7 +65,7 @@ class myScheduler
 				vector<string> currDataFiles;
 				
 				tr1::unordered_map<string, struct file_lock> file_locks; // locks at file level
-				bool checkGetLock(int TID, char base, int mode, string filename, int recordID);
+				bool checkGetLock(int TID, char base, bool process, string filename, int recordID);
 };
 
 #endif
