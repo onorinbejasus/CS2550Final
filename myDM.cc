@@ -18,10 +18,9 @@ myDM::myDM(int searchMode, int maxRecords, int numPages, string file):
 	datafile.open(filename.c_str(), fstream::in | fstream::out);
 		if (datafile.is_open()) {
 			struct tuple test_tuple = tuple_list[2];
-			cout << tuple_list[2].Phone << "\n";
-			cout << test_tuple.Phone << "\n";
 			test_tuple.ClientName.assign(" Clarice");
-			//write(test_tuple);
+			write(test_tuple);
+			read(1553);
 		}
 	datafile.close();
 }
@@ -37,6 +36,12 @@ int myDM::read(int id) {
 	}
 	// Found
 	else {
+		int num = hash_index[id]+1;
+		goToLine(num);
+		//@TODO -- not sure what should do here getting some extra stuff
+		char * buffer = new char[30];
+		datafile.read(buffer,30);
+		//cout << "|" << buffer << "|\n";
 		return 1;
 	}
 }
@@ -46,7 +51,7 @@ int myDM::multRead(int areaCode) {
 	tr1::unordered_map<int,int>::const_iterator it;
 	for (it = hash_index.begin(); it != hash_index.end(); ++it) {
 		//it->first it->second
-		cout << it->first << ":" << it->second << "\n";
+		//cout << it->first << ":" << it->second << "\n";
 	}
 	return 1;
 }
@@ -71,7 +76,7 @@ int myDM::write(tuple newTuple) {
 	goToLine(num);
 	stringstream ss;
 	ss << newTuple.ID << "," << newTuple.ClientName << "," << newTuple.Phone;
-	cout << newTuple.Phone << "\n";
+	//cout << newTuple.Phone << "\n";
 	string str = ss.str();
 	str.append(tuple_length - str.length(), ' ');
 	str.append(1, '\n');
