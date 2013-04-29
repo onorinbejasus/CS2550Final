@@ -19,6 +19,8 @@ struct thread_args
 	int blocked;
 };
 
+//extern myDM *dm;
+
 pthread_mutex_t print_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t *queue_mutex;
@@ -139,7 +141,7 @@ void *handleCommand(void *args){
 							
 			#endif
 			
-    		istringstream iss(command);
+    	istringstream iss(command);
 			string parsed_command[3];
 			
 			for (int i = 0; iss; i++) {
@@ -167,23 +169,27 @@ void *handleCommand(void *args){
 			
 			if (result) {
 				if (parsed_command[0] == "R") {
-					//myDM.read(parse_command[2]);
+					//myClass->dm->read(atoi(parsed_command[2].c_str()));
 					pthread_mutex_lock( &myPTM_mutex );
 					myClass->num_reads++;
 					pthread_mutex_unlock( &myPTM_mutex );
 				} 
 				else if (parsed_command[0] == "W") {
 					pthread_mutex_lock( &myPTM_mutex );
+					//myClass->dm->write(struct tuple);
 					myClass->num_writes++;
 					pthread_mutex_unlock( &myPTM_mutex );
 				}
 				else if (parsed_command[0] == "M") {
 					pthread_mutex_lock( &myPTM_mutex );
+					//@TODO
+					//myClass->dm->multRead(0);
 					myClass->num_reads++;
 					pthread_mutex_unlock( &myPTM_mutex );
 				}
 				else if (parsed_command[0] == "D") {
 					pthread_mutex_lock( &myPTM_mutex );
+					//myClass->dm->deleteData();
 					myClass->num_writes++;
 					pthread_mutex_unlock( &myPTM_mutex );
 				}
@@ -242,7 +248,7 @@ void *handleCommand(void *args){
 	
 } // end handleCommand
 
-myPTM::myPTM(vector< vector<string> > cT, int rM):
+myPTM::myPTM(vector< vector<string> > cT, int rM, int s_mode, int max_r, int nBP, string dF):
 	currTrans(cT), readMode(rM)
 {
 	num_writes = 0;
@@ -269,6 +275,8 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 	// init the scheduler
 	scheduler = new myScheduler(2000, currTrans.size());
 	transactionLog.push_back(getTime() + " : Initializing command iterators");
+	
+	//dm = new myDM(s_mode, max_r, nBP, dF);
 	
 	const int NUM_THREADS = (int)currTrans.size();
 	

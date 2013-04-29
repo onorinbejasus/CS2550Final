@@ -118,8 +118,8 @@ int main(int argc, char*argv[]){
 	string data_file = std::string(argv[5]);
 	
 	// initialize the data manager
-	dm = new myDM(searchMode, maxRecords, numBufferPages, data_file );
-	mainLog.push_back(getTime() + ": Initialized Data Manager");
+	// dm = new myDM(searchMode, maxRecords, numBufferPages, data_file );
+	// mainLog.push_back(getTime() + ": Initialized Data Manager");
 	
 	// number of threads to launch
 	const int NUM_THREADS = argc-6;
@@ -152,7 +152,7 @@ int main(int argc, char*argv[]){
 	mainLog.push_back(getTime() + ": Mode: " + mode);
 	
 	// launch transaction manager
-	ptm = new myPTM(transactions, readMode);
+	ptm = new myPTM(transactions, readMode, searchMode, maxRecords, numBufferPages, data_file);
 	
 	/* writing transaction log out */
 	
