@@ -5,6 +5,7 @@
 #include <vector>
 #include <queue>
 #include <map>
+#include <tr1/unordered_map>
 
 // threading libraries
 extern "C"
@@ -15,29 +16,25 @@ extern "C"
 
 using namespace std;
 
-/*
-struct file_lock_args {
-	string type; // type of lock
-	int holding[]; // TID's of transactions holding lock
-	char filename[1]; // data filename
-	int waiting[]; // TID's of waiting transactions
+// Generic lock tuple with information common to record or file lock
+struct lock_tuple {
+	int TID; // TID
+	bool read; // true = read | false = write
+	bool intention; // true = intention | false = actual
+	bool process; // true = process | false = transaction
 };
 
-struct record_lock_args {
-	string type; // type of lock
-	int holding[]; // TID's of transactions holding lock
-	char filename[1]; // data filename
-	int record_ID[]; // record ID
-	int waiting[]; // TID's of waiting transactions
+// string filename is key
+struct file_lock {
+	tr1::unordered_map<int, struct lock_tuple> record_locks; // locks at record level
+	queue <struct lock_tuple> waitList; // TIDs waiting for this file lock
+	queue <struct lock_tuple> currList; // TIDs currently holding this file lock
 };
-*/
 
-struct lock_elem {
-	queue <int> prop_TIDs; // first TID is one that has it, unless read then all have it
-	int lock_type; // read = 0 or write = 1
-	int Emode; // proc = 0 or trans = 1
-	int record_level; // record_level = 1 @ record or record_level = 0 @ file
-	queue <int> prop_IDs; // record ID's that TID's want to read
+// int record id is key
+struct record_lock {
+	queue <struct lock_tuple> waitList; // TIDs waiting for this record lock
+	queue <struct lock_tuple> currList; // TIDs currently holding this record lock
 };
 
 class myScheduler
@@ -58,7 +55,9 @@ class myScheduler
 				bool reqLock(string type, int TID, string dataItem);
 				void releaseLocks(int TID);
 				vector<string> currDataFiles;
-				vector<lock_elem> dataLocks;
+				
+				tr1::unordered_map<string, struct lock_tuple> file_locks; // locks at file level
+				bool checkGetLock(int TID, bool read, bool process, string filename, int recordID);
 };
 
 #endif

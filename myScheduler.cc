@@ -80,6 +80,36 @@ void myScheduler::releaseLocks(int TID)
 {
 	
 }
+
+//@TODO -- RIGHT NOW ONLY RETURNS TRUE
+bool myScheduler::checkGetLock(int TID, bool read, bool process, string filename, int recordID) {
+	// Check if filename lock is in file_locks
+	tr1::unordered_map<string, struct lock_tuple>::const_iterator got_file = file_locks.find(filename);
+	// If not found, then add it and give TID requested lock
+	if (got_file == file_locks.end()) {
+		// 1. Add filename lock to file_locks
+		
+		// 2. Add record lock to record_locks
+		
+		return true;
+	}
+	else {
+		// If recordID == -1 then TID wants record_level lock so put intention at file_level
+		if (recordID == -1) {
+			// 1. Add file_level lock
+			
+			// 2. Add record_level lock
+			
+			return true;
+		}
+		// Regular lock at file_level
+		else {
+			
+			return true;
+		} 
+	}
+	return true;
+}
 	
 // Check if TID has lock of type on dataItem; Return false no / true yes
 bool myScheduler::checkLock(string type, int TID, string dataItem) 
@@ -87,10 +117,7 @@ bool myScheduler::checkLock(string type, int TID, string dataItem)
 	int int_type = 0;
 	if (type == "R" || type == "M") int_type = 0;
 	if (currDataFiles.size() == 0) {
-		// struct lock_elem new_lock = new struct lock_elem();
-		// new_lock.prop_TIDS.push(TID);
-		// new_lock.prop_IDs.push(dataItem);
-		// new_lock.lock_type = int_type;
+
 		return true;
 	}
 	else {
