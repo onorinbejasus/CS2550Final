@@ -182,7 +182,7 @@ void *handleCommand(void *args){
 				}
 				else if (parsed_command[0] == "M") {
 					pthread_mutex_lock( &myPTM_mutex );
-					//@TODO
+					//myClass->dm->readMult()
 					myClass->dm->multRead(0);
 					myClass->num_reads++;
 					pthread_mutex_unlock( &myPTM_mutex );

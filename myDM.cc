@@ -91,11 +91,11 @@ int myDM::deleteData() {
 	tuple_list.clear();
 	
 	datafile.seekg(0, ios::end);
-	int size = teelg();
-	datafile.seekg(0, ios::begin);
+	int size = datafile.tellg();
+	datafile.seekg(0, ios::beg);
 	
 	for(int i = 0; i < size; i++)
-		dataFile << '\0';
+		datafile << '\0';
 		
 	//datafile.clear();
 	
