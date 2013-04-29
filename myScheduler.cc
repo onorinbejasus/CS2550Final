@@ -2,11 +2,20 @@
 #include <sstream>
 #include <iostream>
 #include <fstream>
-
+#include <algorithm> 
 /* 
 	Ensures strict 2PL and then passes command on to Data Manager
 	Return value passed back by Data Manager or blocked status
 */
+
+// function to find recordID
+struct find_id : std::unary_function<struct lock, bool> {
+    int id;
+    find_id(int id):id(id) { }
+    bool operator()(struct lock const& m) const {
+        return m.recordID == id;
+    }
+};
 
 myScheduler::myScheduler(int dT, int nT):
 	detectTime(dT), numThreads(nT)
@@ -14,14 +23,14 @@ myScheduler::myScheduler(int dT, int nT):
 	// Keep track if myPTM is done and then once done with queues scheduler is done
 	// bool tmDone = false;
 	// bool schedDone = false;
-	
+	//files.push_back("fixed.txt");
+			
 	schedulerLog.push_back("Initializing Scheduler.");
-	
-	
 }
 
-bool myScheduler::handleCommand(int TID, string parsedCommand[], int TID_type) 
+bool myScheduler::handleCommand(int TID, string parsedCommand[], int TID_type, struct args myArgs) 
 {
+		
 	// used to output TID to log
 	stringstream ss;
 	ss << TID;
@@ -29,34 +38,44 @@ bool myScheduler::handleCommand(int TID, string parsedCommand[], int TID_type)
 	string one = parsedCommand[1]; // 1st substring -- filename/Emode
 	string two = parsedCommand[2]; // 2nd substring -- val / record
 	
+	cout << "1:" << parsedCommand[1] << " 2:" << parsedCommand[2] << endl;
+
 	// Command is read/mult_read/write/delete 
 	if (base == "R" || base == "M" || base == "W" || base == "D") {
 		// TID has necessary lock
-		if (checkLock(base,TID,one)) 
+		
+		// TODO -- find file corresponding to ID
+		
+		if (checkGetLock(TID, base.substr(0,1), myArgs.EMode, "fixed.txt", myArgs.ID ) ) 
 		{
+			
 			// Pass on to Data Manager
 			schedulerLog.push_back(ss.str() + " already has lock for command: " + base + " on " + one);
+			
 			return true;
 		
 		}// end if TID has lock
 	
 		// TID doesn't have lock
-		else 
-		{
+		else {
 			bool lockStatus = reqLock(base,TID,one); 
 			
-			if (!lockStatus)
-			{
-				// Add to lockTable, wfgMatrix return blocked
+			if (!lockStatus){ // blocking
+				
 				schedulerLog.push_back(ss.str() + " blocked on lock for command: " + base + " on " + one);
-				return true;
-			}
-			else 
-			{
+				return false;
+				
+			}else { // add locks to table
+				
+				add.push_back(myArgs.ID);
+				locks[TID].push_back(struct locks{base, myArgs.ID, TID})
 				schedulerLog.push_back(ss.str() + " obtains lock for command: " + base + " on " + one);
+				
 				// Pass on to Data Manager
+				// need DM call
+				
 				return true;
-			}
+			} // else
 			
 		} // end else TID tries to get lock	
 	} // End command is read/write/delete
@@ -78,68 +97,71 @@ bool myScheduler::handleCommand(int TID, string parsedCommand[], int TID_type)
 // Release the locks that TID has
 void myScheduler::releaseLocks(int TID) 
 {
-	
+	locks[TID].clear();
 }
 
 //@TODO -- RIGHT NOW ONLY RETURNS TRUE
-bool myScheduler::checkGetLock(int TID, bool read, bool process, string filename, int recordID) {
+bool myScheduler::checkGetLock(int TID, char base, bool process, string filename, int recordID) {
+	
 	// Check if filename lock is in file_locks
 	tr1::unordered_map<string, struct lock_tuple>::const_iterator got_file = file_locks.find(filename);
-	// If not found, then add it and give TID requested lock
-	if (got_file == file_locks.end()) {
-		// 1. Add filename lock to file_locks
-		
-		// 2. Add record lock to record_locks
-		
-		return true;
+	
+	if(got_file == file_locks.end()) {// not added yet
+		return false;
 	}
-	else {
-		// If recordID == -1 then TID wants record_level lock so put intention at file_level
-		if (recordID == -1) {
-			// 1. Add file_level lock
-			
-			// 2. Add record_level lock
-			
-			return true;
-		}
-		// Regular lock at file_level
-		else {
-			
-			return true;
-		} 
-	}
+	
 	return true;
 }
 	
 // Check if TID has lock of type on dataItem; Return false no / true yes
 bool myScheduler::checkLock(string type, int TID, string dataItem) 
-{
-	int int_type = 0;
-	if (type == "R" || type == "M") int_type = 0;
-	if (currDataFiles.size() == 0) {
-
-		return true;
-	}
-	else {
-		// record-level read/write
-		if (type == "R" || type == "W") {
-			
-		}
-		// file-level read/write
-		// type == "M" || type == "D"
-		else {
-	
-		}
-	}
-	return false;
-}
+{}
 
 // Attempt to acquire lock of type on dataItem; Return false failure / true success
 bool myScheduler::reqLock(string type, int TID, string dataItem)
 {
+		// lock found in all, now check intention
 	
+	// if(file:locks.empty){  // first one
+	// 	
+	// 	
+	// 	struct lock_tuple temp{TID,type, ; // true = read | false = write
+	// 	bool intention; // true = intention | false = actual
+	//  	int mode; // true = process | false = transaction};
+	// 	
+	// 	
+	// 	std::pair<string, struct lock_tuple> temp (filename );
+	// 	
+	// 	
+	// 	
+	// 	
+	// 	
+	// 	file_locks.insert();
+	// 
+	// 
+	// 
+	// } 
+	
+	for(int i = 0; i < (int)locks.size(); i++){
+
+		vector<struct lock>::iterator it = std::find_if(locks[i].begin(), locks[i].end(), 
+	         	find_id(recordID));
+			
+		if(it != locks[i].end()){	
+		
+			if(*it.type != 'M' || *it.type != 'D'){
+				return true;
+			}else{
+				return false;
+			} // end else
+			
+		} // end if
+		
+
+	} // end for
+		
 	return false;
-}
+} // end req
 
 // Use the wfgMatrix to detect deadlocks
 void myScheduler::detectDeadlock() 

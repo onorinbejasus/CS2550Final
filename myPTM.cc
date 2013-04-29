@@ -10,12 +10,13 @@
 //#define DEBUG
 
 int timeOut = 5; // wait 5 loops then kill myself
+
 struct thread_args
  {
 	myPTM *ptr;
     int ID;
-		int EMode; // EMode=1 Transaction | EMode=0 Process
-		int blocked;
+	int EMode; // EMode=1 Transaction | EMode=0 Process
+	int blocked;
 };
 
 pthread_mutex_t print_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -158,7 +159,10 @@ void *handleCommand(void *args){
 			}
 			else {
 				pthread_mutex_lock( &sched_log_mutex );
-				result = myClass->scheduler->handleCommand(TID, parsed_command, TID_type);
+			
+				result = myClass->scheduler->handleCommand(TID, parsed_command, 
+					TID_type, struct args{myArgs.ID, myArgs.EMode,myArgs.blocked});
+				
 				pthread_mutex_unlock( &sched_log_mutex );
 			}
 			

@@ -6,6 +6,7 @@
 #include <queue>
 #include <map>
 #include <tr1/unordered_map>
+#include "myPAGE.hh"
 
 // threading libraries
 extern "C"
@@ -14,14 +15,21 @@ extern "C"
     #include <unistd.h>
 }
 
+struct args
+ {
+    int ID;
+	int EMode; // EMode=1 Transaction | EMode=0 Process
+	int blocked;
+};
+
 using namespace std;
 
 // Generic lock tuple with information common to record or file lock
 struct lock_tuple {
 	int TID; // TID
-	bool read; // true = read | false = write
+	char command; // true = read | false = write
 	bool intention; // true = intention | false = actual
-	bool process; // true = process | false = transaction
+ 	int mode; // true = process | false = transaction
 };
 
 // string filename is key
@@ -43,7 +51,7 @@ class myScheduler
 	public:
 		myScheduler(){}; // Default Constructor
     	myScheduler(int dT, int nT);
-		bool handleCommand(int TID, string parsedCommand[], int TID_type);
+		bool handleCommand(int TID, string parsedCommand[], int TID_type, struct args myArgs);
 		vector<string> schedulerLog;
         
 	private:
@@ -56,8 +64,8 @@ class myScheduler
 				void releaseLocks(int TID);
 				vector<string> currDataFiles;
 				
-				tr1::unordered_map<string, struct lock_tuple> file_locks; // locks at file level
-				bool checkGetLock(int TID, bool read, bool process, string filename, int recordID);
+				tr1::unordered_map<string, struct file_lock> file_locks; // locks at file level
+				bool checkGetLock(int TID, char base, int mode, string filename, int recordID);
 };
 
 #endif
