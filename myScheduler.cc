@@ -103,7 +103,10 @@ bool myScheduler::handleCommand(int TID, string parsedCommand[], int TID_type, s
 						
 						struct lock_tuple curr = { TID, base, false, myArgs.EMode};
 						
-						struct record_lock rec = {new vector<struct lock_tuple>(), new vector<struct lock_tuple>()};
+						vector<struct lock_tuple> temp1;
+						vector<struct lock_tuple> temp2;
+						
+						struct record_lock rec = {&temp1, &temp2};
 						rec.currList->push_back(curr);
 						
 						pair <int,struct record_lock> myPair;
@@ -197,36 +200,44 @@ bool myScheduler::reqLock(string type, int TID, int mode, string dataItem, strin
 	
 	tr1::unordered_map<string, struct file_lock>::const_iterator got_file = file_locks.find(filename);
 	
-	if(got_file->second.record_locks->empty()){  // first one
+	bool ret = false;
+	
+	if(file_locks.empty()){  // first one
 		
-		struct record_lock rec_temp = {new vector<struct lock_tuple>(), new vector<struct lock_tuple>() };
+		vector<struct lock_tuple> rec1;
+		vector<struct lock_tuple> rec2;
+		
+		struct record_lock rec_temp = {&rec1, &rec2 };
 		
 		tr1::unordered_map<int, struct record_lock> *temp_map;
 		pair <int,struct record_lock> myPair;
 		myPair = make_pair (TID,rec_temp);	
 		temp_map->insert(myPair); 
 		
-		struct file_lock temp_file = {temp_map, new vector<struct lock_tuple>() , new vector<struct lock_tuple>(), false};
+		vector<struct lock_tuple> temp1;
+		vector<struct lock_tuple> temp2;
+		
+		struct file_lock temp_file = {temp_map, &temp1, &temp2 , false};
 		pair <string,struct file_lock> myPair1;		
 		myPair1 = make_pair (filename, temp_file);
 		file_locks.insert(myPair1);
 		
-		return true;
+		ret = true;
 
 	} // end if 
 	else{ // we need to search 
 		
 		tr1::unordered_map<string, struct file_lock>::const_iterator got_file = file_locks.find(filename);
 		if(got_file == file_locks.end())
-			return true;
+			ret = true;
 	
 		tr1::unordered_map<int, struct record_lock>::const_iterator got_rec = got_file->second.record_locks->find(TID);
 		if(got_rec != got_file->second.record_locks->end())
-			return false;
+			ret = false;
 		
 	}
 		
-	return true;
+	return ret;
 } // end req
 
 // Use the wfgMatrix to detect deadlocks

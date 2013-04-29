@@ -15,14 +15,15 @@ myDM::myDM(int searchMode, int maxRecords, int numPages, string file):
 	loadTuples();
 	
 		// Open data file
-	datafile.open(filename.c_str(), fstream::in | fstream::out);
-		if (datafile.is_open()) {
-			struct tuple test_tuple = tuple_list[2];
-			test_tuple.ClientName.assign(" Clarice");
-			write(test_tuple);
-			read(1553);
-		}
-	datafile.close();
+	// datafile.open(filename.c_str(), fstream::in | fstream::out);
+	// 	if (datafile.is_open()) {
+	// 		struct tuple test_tuple = tuple_list[2];
+	// 		test_tuple.ClientName.assign(" Clarice");
+	// 		write(test_tuple);
+	// 		read(1553);
+	// 	}
+	// 	
+	// datafile.close();
 }
 
 /*** Data operation functions ***/
@@ -120,11 +121,13 @@ void myDM::loadTuples() {
 		istringstream lines(values.c_str());
 		string line;
 		
+		data.close();
+		
 		int j = 0;
 		struct tuple new_tuple;
 		
-		while(!lines.eof()) {
-			getline(lines, line);
+		while(getline(lines, line)) {
+						
 			if(lines.str().compare("\n") != 0) {
 				istringstream iss(line);
 				string sub;
@@ -173,7 +176,6 @@ void myDM::loadTuples() {
 		cout << "Unable to open data file: " << filename << " in load()\n";
 	}
 	fclose(fixedfile);
-	data.close();
 	system("cp fixed.txt X.txt");
 }
 
