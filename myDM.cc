@@ -4,13 +4,13 @@
 
 // pagess
 Page *pages;
-// 2 commas, 2 spaces, 1 new line
-int tuple_size = sizeof(struct tuple)+sizeof(char)*5;
 
 // Open data file and initialize tuple_list
 myDM::myDM(int searchMode, int maxRecords, int numPages, string file):
 	SEARCH_MODE(searchMode), MAX_NUM_RECORDS(maxRecords), NUM_PAGES(numPages), filename(file)
 {
+	// int(10 digits) + name(18) + phone(12) + (', 'x2)
+	tuple_length = 44;
 	// Open data file
 	datafile.open(filename.c_str(), fstream::in | fstream::out);
 	
@@ -90,9 +90,9 @@ int myDM::deleteData() {
 void myDM::loadTuples() {
 	string values; 
 
-	FILE * fixedfile = fopen("fixed.txt", "w+");
-	char nl[2] = {'\n'};
-	char sep[3] = {',', ' '};
+	FILE * fixedfile = fopen("fixed.txt", "w");
+	// char nl[2] = {'\n'};
+	// char sep[3] = {',', ' '};
 	
 	if (datafile.is_open()) {
 		
@@ -137,31 +137,32 @@ void myDM::loadTuples() {
 			// Set new_tuple elements (ID, AreaCode, ClientName, Phone)
 			new_tuple.ID = atoi(parsed_line[0].c_str());
 			new_tuple.AreaCode = atoi(parsed_line[2].substr(1,3).c_str() );
-			strncpy(new_tuple.ClientName, parsed_line[1].c_str(), sizeof(parsed_line[1].c_str()) );
-			strncpy(new_tuple.Phone, parsed_line[2].c_str(), sizeof(parsed_line[1].c_str()) );
+			strncpy(new_tuple.ClientName, parsed_line[1].c_str(), strlen(parsed_line[1].c_str()) );
+			strncpy(new_tuple.Phone, parsed_line[2].c_str(), strlen(parsed_line[2].c_str()) );
 			
-			cout << "ID:" << new_tuple.ID << "\n";
-			cout << "Area Code:" << new_tuple.AreaCode << "\n";
-			cout << "new_tuple.ClientName:" << new_tuple.ClientName << "\n";
-			cout << "parsed line:" << parsed_line[2].c_str() << "\n";
+			// cout << "ID:" << new_tuple.ID << "\n";
+			// cout << "Area Code:" << new_tuple.AreaCode << "\n";
+			// cout << "new_tuple.ClientName:" << new_tuple.ClientName << "\n";
+			// cout << "parsed line:" << parsed_line[2].c_str() << "\n";
 			
 			// Insert into hash_index and tuple_list
 			hash_index.insert(make_pair<int,int>(new_tuple.ID,j));
 			tuple_list.insert(make_pair<int,struct tuple>(new_tuple.ID,new_tuple));
 			j++;
 			
-			
-			//ID, ClientName, Phone\n
-			fwrite( &new_tuple.ID, sizeof(int), 1, fixedfile);
-			fwrite(&(sep), sizeof(char), sizeof(sep), fixedfile);
-			fwrite(&(new_tuple.ClientName), strlen(new_tuple.ClientName), 1, fixedfile);
-			fwrite(&(sep), sizeof(char), sizeof(sep), fixedfile);
-			fwrite(&(new_tuple.Phone), strlen(new_tuple.Phone), 1 ,fixedfile);
-			fwrite(&(nl), sizeof(char), sizeof(nl), fixedfile);
-			
-			exit(0);
+			stringstream ss;
+			ss << new_tuple.ID << "," << new_tuple.ClientName << "," << new_tuple.Phone;
+			string str = ss.str();
+			str.append(tuple_length - str.length(), ' ');
+			str.append(1, '\n');
+			//cout << str.c_str();
+			fwrite(str.c_str(),sizeof(char),strlen(str.c_str()),fixedfile);
+			ss.str("");
+			ss.str().clear();
+			str.clear();
 		}
 		next_line = j;
+		
 	}
 	else {
 		cout << "Unable to open data file: " << filename << " in load()\n";

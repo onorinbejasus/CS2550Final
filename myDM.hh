@@ -47,6 +47,7 @@ class myDM{
 		int SEARCH_MODE;
 		int MAX_NUM_RECORDS;
 		int NUM_PAGES;
+		int tuple_length;
     string filename;
 		fstream datafile;
 		
