@@ -116,7 +116,11 @@ int main(int argc, char*argv[]){
 	ss.clear();
 	
 	// initialize the data manager
+<<<<<<< HEAD
 //	dm = new myDM(searchMode, maxRecords, numBufferPages, "./demo/ds1/X.txt" );
+=======
+	dm = new myDM(searchMode, maxRecords, numBufferPages, "X.txt" );
+>>>>>>> More changes to DM
 	mainLog.push_back(getTime() + ": Initialized Data Manager");
 	
 	// number of threads to launch
