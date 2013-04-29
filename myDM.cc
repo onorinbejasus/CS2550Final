@@ -90,13 +90,25 @@ int myDM::deleteData() {
 void myDM::loadTuples() {
 	string values; 
 
-	FILE * fixedfile = fopen("fixed.txt", "wb");
-	char nl[2] = {'\n', '\0'};
-	char sep[3] = {',', ' ', '\0'};
+	FILE * fixedfile = fopen("fixed.txt", "w+");
+	char nl[2] = {'\n'};
+	char sep[3] = {',', ' '};
 	
 	if (datafile.is_open()) {
+		
 		datafile.seekg(0, ios::end);
-		values.reserve(datafile.tellg());
+		
+		int size = datafile.tellg();
+		
+		if(size == 0){
+			cout << "size is 0" << endl;
+			
+			datafile.close();
+			return;
+			
+		}
+					
+		values.reserve(size);
 		datafile.seekg(0, std::ios::beg);
 		
 		values.assign((std::istreambuf_iterator<char>(datafile)), std::istreambuf_iterator<char>());
@@ -107,6 +119,7 @@ void myDM::loadTuples() {
 		
 		int j = 0;
 		struct tuple new_tuple;
+		
 		while(!lines.eof()) {
 			getline(lines, line);
 			//cout << line << "\n";
@@ -117,16 +130,19 @@ void myDM::loadTuples() {
 			// Assuming of format: 753, Seras, 482-626-6836 (', ' between each)
 			for(i = 0; getline(iss,sub,','); i++) {
 				parsed_line[i] = sub;
-				//cout << sub << "\n";
 			}
 			//cout << "==========\n";
-			//cout << parsed_line[2].substr(1,3) << "\n";
 			
 			// Set new_tuple elements (ID, AreaCode, ClientName, Phone)
 			new_tuple.ID = atoi(parsed_line[0].c_str());
-			new_tuple.AreaCode = atoi(parsed_line[2].substr(1,3).c_str());
-			strncpy(new_tuple.ClientName, parsed_line[1].c_str(),18);
-			strncpy(new_tuple.Phone, parsed_line[2].c_str(),12);
+			new_tuple.AreaCode = atoi(parsed_line[2].substr(1,3).c_str() );
+			strncpy(new_tuple.ClientName, parsed_line[1].c_str(), sizeof(parsed_line[1].c_str()) );
+			strncpy(new_tuple.Phone, parsed_line[2].c_str(), sizeof(parsed_line[1].c_str()) );
+			
+			cout << "ID:" << new_tuple.ID << "\n";
+			cout << "Area Code:" << new_tuple.AreaCode << "\n";
+			cout << "new_tuple.ClientName:" << new_tuple.ClientName << "\n";
+			cout << "parsed line:" << parsed_line[2].c_str() << "\n";
 			
 			// Insert into hash_index and tuple_list
 			hash_index.insert(make_pair<int,int>(new_tuple.ID,j));
@@ -135,12 +151,14 @@ void myDM::loadTuples() {
 			
 			
 			//ID, ClientName, Phone\n
-			//fwrite(&new_tuple.ID,sizeof(int),1,fixedfile);
-			//fwrite(&sep,sizeof(sep),2,fixedfile);
-			//fwrite(&new_tuple.ClientName,sizeof(new_tuple.ClientName),strlen(new_tuple.ClientName),fixedfile);
-			//fwrite(&sep,sizeof(sep),strlen(sep),fixedfile);
-			//fwrite(&new_tuple.Phone,sizeof(new_tuple.Phone),strlen(new_tuple.Phone),fixedfile);
-			//fwrite(&nl,sizeof(nl),strlen(nl),fixedfile);
+			fwrite( &new_tuple.ID, sizeof(int), 1, fixedfile);
+			fwrite(&(sep), sizeof(char), sizeof(sep), fixedfile);
+			fwrite(&(new_tuple.ClientName), strlen(new_tuple.ClientName), 1, fixedfile);
+			fwrite(&(sep), sizeof(char), sizeof(sep), fixedfile);
+			fwrite(&(new_tuple.Phone), strlen(new_tuple.Phone), 1 ,fixedfile);
+			fwrite(&(nl), sizeof(char), sizeof(nl), fixedfile);
+			
+			exit(0);
 		}
 		next_line = j;
 	}

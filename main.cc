@@ -98,25 +98,25 @@ int main(int argc, char*argv[]){
 	
 	mainLog.push_back(getTime() + ": Read in command line arguments");
 	stringstream ss;
-	const int maxRecords = atoi(argv[1]);
+	int maxRecords = atoi(argv[1]);
 	ss << maxRecords;
 	mainLog.push_back(getTime() + ": Records: " + ss.str());
 	ss.clear();
-	const int numBufferPages = atoi(argv[2]);
+	int numBufferPages = atoi(argv[2]);
 	ss << numBufferPages;
 	mainLog.push_back(getTime() + ": Number of Buffer Pages: " + ss.str());
 	ss.clear();
-	const int searchMode = atoi(argv[3]);
+	int searchMode = atoi(argv[3]);
 	ss << searchMode;
 	mainLog.push_back(getTime() + ": Search Mode: " + ss.str());
 	ss.clear();
-	const int readMode = atoi(argv[4]);
+	int readMode = atoi(argv[4]);
 	ss << readMode;
 	mainLog.push_back(getTime() + ": Read Mode: " + ss.str());
 	ss.clear();
 	
 	// initialize the data manager
-	dm = new myDM(searchMode, maxRecords, numBufferPages );
+	dm = new myDM(searchMode, maxRecords, numBufferPages, "fixed.txt" );
 	mainLog.push_back(getTime() + ": Initialized Data Manager");
 	
 	// number of threads to launch

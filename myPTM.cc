@@ -7,7 +7,7 @@
 #include <signal.h>
 #include <errno.h>
 
-#define DEBUG
+//#define DEBUG
 
 int timeOut = 5; // wait 5 loops then kill myself
 struct thread_args
@@ -552,10 +552,10 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 		pthread_mutex_unlock( &print_mutex );
 	#endif
 	
-		int *ptr;
+	//int *ptr;
 	
 	/* wait for threads to join */
-	for(int i = 0; i < NUM_THREADS-1; i++){
+	for(int i = 0; i < NUM_THREADS; i++){
 	
 		#ifdef DEBUG
 			pthread_mutex_lock( &print_mutex );
@@ -563,7 +563,7 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 	 		pthread_mutex_unlock( &print_mutex );
 		#endif
 			
-		pthread_join(threads[i], (void**)&(*ptr));	
+		pthread_join(threads[i], NULL);	
 		
 		#ifdef DEBUG
 			pthread_mutex_lock( &print_mutex );
