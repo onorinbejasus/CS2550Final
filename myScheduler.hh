@@ -5,8 +5,11 @@
 #include <vector>
 #include <queue>
 #include <map>
+#include <iostream>
 #include <tr1/unordered_map>
 #include "myPAGE.hh"
+#include <cstdio>
+#include <cstdlib>
 
 // threading libraries
 extern "C"
@@ -27,23 +30,22 @@ using namespace std;
 // Generic lock tuple with information common to record or file lock
 struct lock_tuple {
 	int TID; // TID
-	char command; // true = read | false = write
+	string command; // W, D, R, M
 	bool intention; // true = intention | false = actual
  	int mode; // true = process | false = transaction
 };
-
-// string filename is key
-struct file_lock {
-	tr1::unordered_map<int, struct lock_tuple> record_locks; // locks at record level
-	queue <struct lock_tuple> waitList; // TIDs waiting for this file lock
-	queue <struct lock_tuple> currList; // TIDs currently holding this file lock
-};
-
 // int record id is key
 struct record_lock {
-	queue <struct lock_tuple> waitList; // TIDs waiting for this record lock
-	queue <struct lock_tuple> currList; // TIDs currently holding this record lock
+	queue <struct lock_tuple> *waitList; // TIDs waiting for this record lock
+	queue <struct lock_tuple> *currList; // TIDs currently holding this record lock
 };
+// string filename is key
+struct file_lock {
+	tr1::unordered_map<int, struct record_lock> record_locks; // locks at record level
+	queue <struct lock_tuple> *waitList; // TIDs waiting for this file lock
+	queue <struct lock_tuple> *currList; // TIDs currently holding this file lock
+};
+
 
 class myScheduler
 {
@@ -59,13 +61,13 @@ class myScheduler
 				int numThreads;
 				vector<int> *wfgMatrix;
         void detectDeadlock();
-				bool checkLock(string type, int TID, string dataItem);
-				bool reqLock(string type, int TID, string dataItem);
+				bool checkLock(string type, int TID,  string dataItem);
+				bool reqLock(string type, int TID, int mode, string dataItem, string filename);
 				void releaseLocks(int TID);
 				vector<string> currDataFiles;
 				
 				tr1::unordered_map<string, struct file_lock> file_locks; // locks at file level
-				bool checkGetLock(int TID, char base, bool process, string filename, int recordID);
+				bool checkGetLock(int TID, string base, bool process, string filename, int recordID);
 };
 
 #endif
