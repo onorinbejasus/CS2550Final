@@ -38,9 +38,11 @@ struct lock_tuple {
 struct record_lock {
 	vector <struct lock_tuple> *waitList; // TIDs waiting for this record lock
 	vector <struct lock_tuple> *currList; // TIDs currently holding this record lock
+
 };
 // string filename is key
 struct file_lock {
+
 	tr1::unordered_map<int, struct record_lock> *record_locks; // locks at record level
 	vector <struct lock_tuple> *waitList; // TIDs waiting for this file lock
 	vector <struct lock_tuple> *currList; // TIDs currently holding this file lock

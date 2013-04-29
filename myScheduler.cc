@@ -52,6 +52,7 @@ bool myScheduler::handleCommand(int TID, string parsedCommand[], int TID_type, s
 				{
 					struct lock_tuple lock = { TID, base, true, myArgs.EMode };
 					
+					// curr
 					got_file->second.currList->push_back(lock);
 				
 				//	got_file->second.blocked = true;
@@ -103,10 +104,10 @@ bool myScheduler::handleCommand(int TID, string parsedCommand[], int TID_type, s
 						
 						struct lock_tuple curr = { TID, base, false, myArgs.EMode};
 						
-						vector<struct lock_tuple> temp1;
-						vector<struct lock_tuple> temp2;
+						struct record_lock rec;// = {&temp1, &temp2};
+						rec.currList = new vector<struct lock_tuple>();
+						rec.waitList = new vector<struct lock_tuple>();
 						
-						struct record_lock rec = {&temp1, &temp2};
 						rec.currList->push_back(curr);
 						
 						pair <int,struct record_lock> myPair;
@@ -148,8 +149,11 @@ void myScheduler::releaseLocks(int TID, string filename)
 	tr1::unordered_map<string, struct file_lock>::const_iterator got_file = file_locks.find(filename);
 	tr1::unordered_map<int, struct record_lock>::const_iterator got_rec = got_file->second.record_locks->find(TID);
 	
-	if(got_rec != got_file->second.record_locks->end())
-		got_file->second.record_locks->erase(TID);
+	if(got_rec != got_file->second.record_locks->end()){
+		got_rec->second.waitList->clear();
+		got_rec->second.currList->clear();
+		got_file->second.record_locks->erase(got_rec);
+	}
 }
 
 void myScheduler::releaseLock(int TID, string filename) {
@@ -204,20 +208,21 @@ bool myScheduler::reqLock(string type, int TID, int mode, string dataItem, strin
 	
 	if(file_locks.empty()){  // first one
 		
-		vector<struct lock_tuple> rec1;
-		vector<struct lock_tuple> rec2;
 		
-		struct record_lock rec_temp = {&rec1, &rec2 };
+		struct record_lock rec_temp;// = {&rec1, &rec2 };
 		
 		tr1::unordered_map<int, struct record_lock> *temp_map;
 		pair <int,struct record_lock> myPair;
-		myPair = make_pair (TID,rec_temp);	
+		myPair = make_pair (TID, rec_temp);	
 		temp_map->insert(myPair); 
 		
-		vector<struct lock_tuple> temp1;
-		vector<struct lock_tuple> temp2;
+		struct file_lock temp_file;
 		
-		struct file_lock temp_file = {temp_map, &temp1, &temp2 , false};
+		temp_file.currList = new vector<struct lock_tuple>();
+		temp_file.waitList = new vector<struct lock_tuple>();
+	
+		temp_file.record_locks = temp_map;
+		
 		pair <string,struct file_lock> myPair1;		
 		myPair1 = make_pair (filename, temp_file);
 		file_locks.insert(myPair1);
@@ -234,7 +239,6 @@ bool myScheduler::reqLock(string type, int TID, int mode, string dataItem, strin
 		tr1::unordered_map<int, struct record_lock>::const_iterator got_rec = got_file->second.record_locks->find(TID);
 		if(got_rec != got_file->second.record_locks->end())
 			ret = false;
-		
 	}
 		
 	return ret;
