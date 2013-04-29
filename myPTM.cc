@@ -160,8 +160,8 @@ void *handleCommand(void *args){
 			else {
 				pthread_mutex_lock( &sched_log_mutex );
 			
-			//	result = myClass->scheduler->handleCommand(TID, parsed_command, 
-			//		TID_type, struct args{myArgs.ID, myArgs.EMode,myArgs.blocked});
+				result = myClass->scheduler->handleCommand(TID, parsed_command, 
+					TID_type, struct args{myArgs.ID, myArgs.EMode,myArgs.blocked});
 				
 				pthread_mutex_unlock( &sched_log_mutex );
 			}

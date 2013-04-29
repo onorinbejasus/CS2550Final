@@ -33,66 +33,66 @@ bool myScheduler::handleCommand(int TID, string parsedCommand[], int TID_type, s
 {
 		
 		// used to output TID to log
-		// stringstream ss;
-		// 	ss << TID;
-		// 	string base = parsedCommand[0]; // base command
-		// 	string one = parsedCommand[1]; // 1st substring -- filename/Emode
-		// 	string two = parsedCommand[2]; // 2nd substring -- val / record
-		// 	
-		// 	cout << "1:" << parsedCommand[1] << " 2:" << parsedCommand[2] << endl;
-		// 	
-		// 	// Command is read/mult_read/write/delete 
-		// 	if (base == "R" || base == "M" || base == "W" || base == "D") {
-		// 		// TID has necessary lock
-		// 		
-		// 		// TODO -- find file corresponding to ID
-		// 		
-		// 		if (checkGetLock(TID, base.substr(0,1), myArgs.EMode, "fixed.txt", myArgs.ID ) ) 
-		// 		{
-		// 			
-		// 			// Pass on to Data Manager
-		// 			schedulerLog.push_back(ss.str() + " already has lock for command: " + base + " on " + one);
-		// 			
-		// 			return true;
-		// 		
-		// 		}// end if TID has lock
-		// 	
-		// 		// TID doesn't have lock
-		// 		else {
-		// 			bool lockStatus = reqLock(base,TID, myArgs.EMode, one, "fixed.txt"); 
-		// 			
-		// 			if (!lockStatus){ // blocking
-		// 				
-		// 				schedulerLog.push_back(ss.str() + " blocked on lock for command: " + base + " on " + one);
-		// 				
-		// 				return false;
-		// 				
-		// 			}else { // add locks to table
-		// 				
-		// 				
-		// 				schedulerLog.push_back(ss.str() + " obtains lock for command: " + base + " on " + one);
-		// 				
-		// 				// Pass on to Data Manager
-		// 				// need DM call
-		// 				
-		// 				return true;
-		// 			} // else
-		// 			
-		// 		} // end else TID tries to get lock	
-		// 	} // End command is read/write/delete
-		// 	
-		// 	else if (base == "C" || base == "A") 
-		// 	{
-		// 		// Pass on to Data Manager
-		// 		releaseLocks(TID);
-		// 		return true;
-		// 	} // End is commit/abort
-		// 	
-		// 	// Error - unknown command
-		// 	else {
-		// 		//@TODO	cout << "Unknown command: " + parsedCommand[0] + endl;
-		// 	return true;
-		//  } // end else
+		stringstream ss;
+		ss << TID;
+		string base = parsedCommand[0]; // base command
+		string one = parsedCommand[1]; // 1st substring -- filename/Emode
+		string two = parsedCommand[2]; // 2nd substring -- val / record
+		
+		cout << "1:" << parsedCommand[1] << " 2:" << parsedCommand[2] << endl;
+		
+		// Command is read/mult_read/write/delete 
+		if (base == "R" || base == "M" || base == "W" || base == "D") {
+			// TID has necessary lock
+			
+			// TODO -- find file corresponding to ID
+			
+			if (checkGetLock(TID, base.substr(0,1), myArgs.EMode, "fixed.txt", myArgs.ID ) ) 
+			{
+				
+				// Pass on to Data Manager
+				schedulerLog.push_back(ss.str() + " already has lock for command: " + base + " on " + one);
+				
+				return true;
+			
+			}// end if TID has lock
+		
+			// TID doesn't have lock
+			else {
+				bool lockStatus = reqLock(base,TID, myArgs.EMode, one, "fixed.txt"); 
+				
+				if (!lockStatus){ // blocking
+					
+					schedulerLog.push_back(ss.str() + " blocked on lock for command: " + base + " on " + one);
+					
+					return false;
+					
+				}else { // add locks to table
+					
+					
+					schedulerLog.push_back(ss.str() + " obtains lock for command: " + base + " on " + one);
+					
+					// Pass on to Data Manager
+					// need DM call
+					
+					return true;
+				} // else
+				
+			} // end else TID tries to get lock	
+		} // End command is read/write/delete
+		
+		else if (base == "C" || base == "A") 
+		{
+			// Pass on to Data Manager
+			releaseLocks(TID);
+			return true;
+		} // End is commit/abort
+		
+		// Error - unknown command
+		else {
+			//@TODO	cout << "Unknown command: " + parsedCommand[0] + endl;
+		return true;
+	 } // end else
 }
 
 // Release the locks that TID has
@@ -104,17 +104,17 @@ void myScheduler::releaseLocks(int TID)
 //@TODO -- RIGHT NOW ONLY RETURNS TRUE
 bool myScheduler::checkGetLock(int TID, string base, bool process, string filename, int recordID) {
 	
-	// // Check if filename lock is in file_locks
-	// if(file_locks.empty()) 
-	// 	return false;
-	// 	
-	// tr1::unordered_map<string, struct file_lock>::const_iterator got_file = file_locks.find(filename);
-	// 
-	//  if(got_file == file_locks.end()) {// not added yet
-	//  	return false;
-	//  }
-	//  
-	// return true;
+	// Check if filename lock is in file_locks
+	if(file_locks.empty()) 
+		return false;
+		
+	tr1::unordered_map<string, struct file_lock>::const_iterator got_file = file_locks.find(filename);
+	
+	 if(got_file == file_locks.end()) {// not added yet
+	 	return false;
+	 }
+	 
+	return true;
 }
 	
 // Check if TID has lock of type on dataItem; Return false no / true yes
@@ -126,20 +126,21 @@ bool myScheduler::reqLock(string type, int TID, int mode, string dataItem, strin
 {
 	// lock found in all, now check intention
 	
-	// if(file_locks.empty()){  // first one
-	// 		
-	// 		struct record_lock rec_temp = {new queue<struct lock_tuple> , new queue<struct lock_tuple> };
-	// 		
-	// 		tr1::unordered_map<int, struct record_lock> temp_map;
-	// 		temp_map.add(TID, rec_temp); 
-	// 		
-	// 		struct file_loc temp_file = {temp_map, new queue<struct lock_tuple> , new queue<struct lock_tuple>};
-	// 		
-	// 		file_locks.add(filename, temp_file);
-	// 
-	// 	} // end if 
-	
-	
+	if(file_locks.empty()){  // first one
+		
+		struct record_lock rec_temp = {new queue<struct lock_tuple> , new queue<struct lock_tuple> };
+		
+		tr1::unordered_map<int, struct record_lock> temp_map;
+		pair <int,struct record_lock> myPair;
+		myPair = make_pair (TID,rec_temp);	
+		temp_map.insert(myPair); 
+		
+		struct file_lock temp_file = {temp_map, new queue<struct lock_tuple> , new queue<struct lock_tuple>};
+		pair <string,struct file_lock> myPair1;		
+		myPair1 = make_pair (filename, temp_file);
+		file_locks.insert(myPair1);
+
+	} // end if 
 		
 	return false;
 } // end req
