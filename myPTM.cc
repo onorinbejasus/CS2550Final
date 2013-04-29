@@ -7,7 +7,7 @@
 #include <signal.h>
 #include <errno.h>
 
-//#define DEBUG
+#define DEBUG
 
 int timeOut = 5; // wait 5 loops then kill myself
 struct thread_args
@@ -229,7 +229,8 @@ void *handleCommand(void *args){
 				
 	} // end while
 	
-	pthread_exit(0);
+	int ret = 0;
+	pthread_exit(&ret);
 	
 	#ifdef DEBUG
 		pthread_mutex_lock( &print_mutex );
@@ -547,20 +548,29 @@ myPTM::myPTM(vector< vector<string> > cT, int rM):
 	
 	#ifdef DEBUG
 		pthread_mutex_lock( &print_mutex );
-		cout << "number fo threads" << NUM_THREADS << endl;
+		cout << "number fo threads " << NUM_THREADS << endl;
 		pthread_mutex_unlock( &print_mutex );
 	#endif
-		
+	
+		int *ptr;
+	
 	/* wait for threads to join */
 	for(int i = 0; i < NUM_THREADS-1; i++){
-		
+	
 		#ifdef DEBUG
 			pthread_mutex_lock( &print_mutex );
 			cout << "waiting on " << i << endl;
 	 		pthread_mutex_unlock( &print_mutex );
 		#endif
 			
-		pthread_join(threads[i], NULL);	
+		pthread_join(threads[i], (void**)&(*ptr));	
+		
+		#ifdef DEBUG
+			pthread_mutex_lock( &print_mutex );
+			printf("\n return value from first thread is [%d]\n", *ptr);
+			pthread_mutex_unlock( &print_mutex );
+		#endif
+	    
 	}
 	
 	pthread_mutex_lock( &log_mutex );
