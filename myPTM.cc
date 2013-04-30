@@ -40,7 +40,7 @@ vector<string> transactionLog;
 bool checkQueue(int TID) { 
 	return command_queue[TID].empty(); 
 } // end check
-
+z
 // get the next item in the queue
 string popQueue(int TID){
 	string command = command_queue[TID].front();
@@ -176,8 +176,32 @@ void *handleCommand(void *args){
 				} 
 				else if (parsed_command[0] == "W") {
 					pthread_mutex_lock( &myPTM_mutex );
-					//myClass->dm->write(struct tuple);
+					
+					// string temp = parsed_command[2].substr(1, strlen(parsed_command[2].c_str())-2 );
+					// 					
+					// 					char *t;
+					// 					t = (char*)malloc(temp.length());
+					// 					strcpy(t, temp.c_str());
+					// 					
+					// 					char *pch;
+					// 					pch = strtok (t,",");
+					// 					int id = atoi(pch);
+					// 					
+					// 					pch = strtok (NULL,",");
+					// 					int area = atoi(pch);
+					// 					
+					// 					pch = strtok (NULL,",");
+					// 					string client = string(pch);
+					// 					
+					// 					pch = strtok (NULL,",");
+					// 					string phone = string(pch);
+					// 					
+					// 					
+					// 					struct tuple tup = {id, area, client, phone};
+					// 						
+					// 					myClass->dm->write(tup);
 					myClass->num_writes++;
+					
 					pthread_mutex_unlock( &myPTM_mutex );
 				}
 				else if (parsed_command[0] == "M") {
